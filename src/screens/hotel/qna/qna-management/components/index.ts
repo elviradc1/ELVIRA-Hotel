@@ -1,0 +1,1 @@
+export { QnATable } from "./QnATable";

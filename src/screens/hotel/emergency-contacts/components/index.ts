@@ -1,0 +1,1 @@
+export { EmergencyContactsTable } from "./EmergencyContactsTable";

@@ -1,0 +1,1 @@
+export { RestaurantOrdersTable } from "./RestaurantOrdersTable";
