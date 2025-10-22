@@ -4,6 +4,7 @@ export * from "./useCurrentUserHotel";
 export * from "./useHotelContext";
 export * from "./usePagination";
 export * from "./useHotelProfile";
+export * from "./useFilteredMenuItems";
 
 // API hooks with optimization
 export * from "./api";

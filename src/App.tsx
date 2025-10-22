@@ -2,6 +2,7 @@ import { useAuth } from "./hooks/useAuth";
 import { Auth } from "./components/Auth";
 import { Layout } from "./components/Layout";
 import { HotelDashboard } from "./screens/hotel/HotelDashboard";
+import { ElviraDashboard } from "./screens/elvira/ElviraDashboard";
 import { elviraMenuItems } from "./utils/hotel/menuItems";
 
 function App() {
@@ -39,7 +40,7 @@ function App() {
     return <HotelDashboard user={user} onSignOut={signOut} />;
   }
 
-  // Show layout for elvira users (empty for now)
+  // Show layout for elvira users
   if (user.role === "elvira") {
     console.log("🟢 App: Rendering elvira dashboard");
     return (
@@ -50,11 +51,7 @@ function App() {
         activeMenuItem="dashboard"
         collapsible={true}
       >
-        <div className="p-6">
-          <div className="text-gray-500">
-            Elvira dashboard content goes here
-          </div>
-        </div>
+        <ElviraDashboard />
       </Layout>
     );
   }

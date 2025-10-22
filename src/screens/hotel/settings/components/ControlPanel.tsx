@@ -1,12 +1,18 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   LayoutBrandingSection,
   GuestServicesSection,
   InformationCommunicationSection,
+  AboutUsModal,
+  HotelPhotoGalleryModal,
 } from "./control-panel";
 import {
   useHotelSettings,
   useToggleHotelSettingByKey,
+  useUpdateAboutUs,
+  getAboutUsFromSettings,
+  useUpdatePhotoGallery,
+  getPhotoGalleryFromSettings,
 } from "../../../../hooks/settings";
 import { useHotelId } from "../../../../hooks";
 import { useAuth } from "../../../../hooks/useAuth";
@@ -16,6 +22,22 @@ export function ControlPanel() {
   const { user } = useAuth();
   const { data: settings, isLoading } = useHotelSettings(hotelId || undefined);
   const toggleSetting = useToggleHotelSettingByKey();
+  const updateAboutUs = useUpdateAboutUs();
+  const updatePhotoGallery = useUpdatePhotoGallery();
+
+  // About Us Modal State
+  const [isAboutUsModalOpen, setIsAboutUsModalOpen] = useState(false);
+  const aboutUsData = useMemo(
+    () => getAboutUsFromSettings(settings),
+    [settings]
+  );
+
+  // Photo Gallery Modal State
+  const [isPhotoGalleryModalOpen, setIsPhotoGalleryModalOpen] = useState(false);
+  const photoGalleryImages = useMemo(
+    () => getPhotoGalleryFromSettings(settings),
+    [settings]
+  );
 
   // Layout & Branding settings
   const layoutBranding = useMemo(() => {
@@ -113,6 +135,30 @@ export function ControlPanel() {
     });
   };
 
+  const handleSaveAboutUs = async (data: {
+    aboutUsText: string;
+    buttonText: string;
+    buttonUrl: string;
+  }) => {
+    if (!hotelId) return;
+
+    await updateAboutUs.mutateAsync({
+      hotelId,
+      aboutUsText: data.aboutUsText,
+      buttonText: data.buttonText,
+      buttonUrl: data.buttonUrl,
+    });
+  };
+
+  const handleSavePhotoGallery = async (imageUrls: string[]) => {
+    if (!hotelId) return;
+
+    await updatePhotoGallery.mutateAsync({
+      hotelId,
+      imageUrls,
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="p-6 flex justify-center">
@@ -126,8 +172,8 @@ export function ControlPanel() {
       <LayoutBrandingSection
         settings={layoutBranding}
         onToggle={handleLayoutBrandingToggle}
-        onManagePhotos={() => console.log("Manage photos clicked")}
-        onEditAbout={() => console.log("Edit about clicked")}
+        onManagePhotos={() => setIsPhotoGalleryModalOpen(true)}
+        onEditAbout={() => setIsAboutUsModalOpen(true)}
       />
 
       <GuestServicesSection
@@ -138,6 +184,22 @@ export function ControlPanel() {
       <InformationCommunicationSection
         settings={informationCommunication}
         onToggle={handleInformationCommunicationToggle}
+      />
+
+      {/* About Us Modal */}
+      <AboutUsModal
+        isOpen={isAboutUsModalOpen}
+        onClose={() => setIsAboutUsModalOpen(false)}
+        onSave={handleSaveAboutUs}
+        initialData={aboutUsData}
+      />
+
+      {/* Hotel Photo Gallery Modal */}
+      <HotelPhotoGalleryModal
+        isOpen={isPhotoGalleryModalOpen}
+        onClose={() => setIsPhotoGalleryModalOpen(false)}
+        onSave={handleSavePhotoGallery}
+        initialImages={photoGalleryImages}
       />
     </div>
   );

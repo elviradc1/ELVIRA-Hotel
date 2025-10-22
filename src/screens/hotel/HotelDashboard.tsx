@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Layout } from "../../components/Layout";
-import { hotelMenuItems } from "../../utils/hotel/menuItems";
 import { HotelProvider } from "../../contexts/HotelContext";
+import { useFilteredMenuItems } from "../../hooks";
 import {
   Overview,
   HotelStaff,
@@ -45,20 +45,27 @@ const componentMap = {
 // Inner dashboard component that uses hotel context
 function DashboardContent({ user, onSignOut }: HotelDashboardProps) {
   const [activeMenuItem, setActiveMenuItem] = useState("overview");
+  const { menuItems } = useFilteredMenuItems();
 
   // Real-time subscriptions are now handled by individual module hooks
   // Each module (staff, chat, guests, etc.) has its own real-time subscription
 
+  // If current active menu item is hidden, redirect to overview
+  const isCurrentMenuVisible = menuItems.some(
+    (item) => item.id === activeMenuItem
+  );
+  const effectiveMenuItem = isCurrentMenuVisible ? activeMenuItem : "overview";
+
   const activeComponent = componentMap[
-    activeMenuItem as keyof typeof componentMap
+    effectiveMenuItem as keyof typeof componentMap
   ] || <Overview />;
 
   return (
     <Layout
       user={user}
       onSignOut={onSignOut}
-      menuItems={hotelMenuItems}
-      activeMenuItem={activeMenuItem}
+      menuItems={menuItems}
+      activeMenuItem={effectiveMenuItem}
       onMenuItemChange={setActiveMenuItem}
       collapsible={true}
     >
