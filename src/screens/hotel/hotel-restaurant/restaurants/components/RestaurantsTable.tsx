@@ -1,6 +1,13 @@
 import { useMemo } from "react";
-import { Table, type TableColumn } from "../../../../../components/ui";
-import { useRestaurants } from "../../../../../hooks/hotel-restaurant/restaurants/useRestaurants";
+import {
+  Table,
+  type TableColumn,
+  StatusBadge,
+} from "../../../../../components/ui";
+import {
+  useRestaurants,
+  useUpdateRestaurant,
+} from "../../../../../hooks/hotel-restaurant/restaurants/useRestaurants";
 import { useHotelId } from "../../../../../hooks/useHotelContext";
 import type { Database } from "../../../../../types/database";
 
@@ -9,6 +16,7 @@ type RestaurantRow = Database["public"]["Tables"]["restaurants"]["Row"];
 interface Restaurant extends Record<string, unknown> {
   id: string;
   restaurantStatus: string;
+  isActive: boolean;
   name: string;
   cuisine: string;
   description: string;
@@ -28,12 +36,26 @@ export function RestaurantsTable({ searchValue }: RestaurantsTableProps) {
     error,
   } = useRestaurants(hotelId || undefined);
 
+  // Get the update mutation
+  const updateRestaurant = useUpdateRestaurant();
+
   // Define table columns for restaurants
   const columns: TableColumn<Restaurant>[] = [
     {
       key: "restaurantStatus",
       label: "Restaurant Status",
       sortable: true,
+      render: (_value, row) => (
+        <StatusBadge
+          status={row.isActive ? "active" : "inactive"}
+          onToggle={async (newStatus) => {
+            await updateRestaurant.mutateAsync({
+              id: row.id,
+              updates: { is_active: newStatus },
+            });
+          }}
+        />
+      ),
     },
     {
       key: "name",
@@ -73,6 +95,7 @@ export function RestaurantsTable({ searchValue }: RestaurantsTableProps) {
       .map((restaurant: RestaurantRow) => ({
         id: restaurant.id,
         restaurantStatus: restaurant.is_active ? "Active" : "Inactive",
+        isActive: restaurant.is_active,
         name: restaurant.name,
         cuisine: restaurant.cuisine,
         description: restaurant.description || "N/A",

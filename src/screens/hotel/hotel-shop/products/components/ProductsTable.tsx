@@ -1,6 +1,13 @@
 import { useMemo } from "react";
-import { Table, type TableColumn } from "../../../../../components/ui";
-import { useProducts } from "../../../../../hooks/hotel-shop/products/useProducts";
+import {
+  Table,
+  type TableColumn,
+  StatusBadge,
+} from "../../../../../components/ui";
+import {
+  useProducts,
+  useUpdateProduct,
+} from "../../../../../hooks/hotel-shop/products/useProducts";
 import { useHotelId } from "../../../../../hooks/useHotelContext";
 import type { Database } from "../../../../../types/database";
 
@@ -9,6 +16,7 @@ type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 interface Product extends Record<string, unknown> {
   id: string;
   status: string;
+  isActive: boolean;
   product: string;
   category: string;
   price: string;
@@ -29,12 +37,26 @@ export function ProductsTable({ searchValue }: ProductsTableProps) {
     error,
   } = useProducts(hotelId || undefined);
 
+  // Get the update mutation
+  const updateProduct = useUpdateProduct();
+
   // Define table columns for products
   const columns: TableColumn<Product>[] = [
     {
       key: "status",
       label: "Status",
       sortable: true,
+      render: (_value, row) => (
+        <StatusBadge
+          status={row.isActive ? "active" : "inactive"}
+          onToggle={async (newStatus) => {
+            await updateProduct.mutateAsync({
+              id: row.id,
+              updates: { is_active: newStatus },
+            });
+          }}
+        />
+      ),
     },
     {
       key: "product",
@@ -79,6 +101,7 @@ export function ProductsTable({ searchValue }: ProductsTableProps) {
       .map((product: ProductRow) => ({
         id: product.id,
         status: product.is_active ? "Active" : "Inactive",
+        isActive: product.is_active,
         product: product.name,
         category: product.category,
         price: `$${product.price.toFixed(2)}`,

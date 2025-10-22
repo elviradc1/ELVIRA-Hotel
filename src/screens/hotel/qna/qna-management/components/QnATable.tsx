@@ -1,11 +1,19 @@
 import { useMemo } from "react";
-import { Table, type TableColumn } from "../../../../../components/ui";
-import { useQARecommendations } from "../../../../../hooks/qna/useQARecommendations";
+import {
+  Table,
+  type TableColumn,
+  StatusBadge,
+} from "../../../../../components/ui";
+import {
+  useQARecommendations,
+  useUpdateQARecommendation,
+} from "../../../../../hooks/qna/useQARecommendations";
 import { useHotelContext } from "../../../../../hooks/useHotelContext";
 
 interface QnATableData extends Record<string, unknown> {
   id: string;
   status: string;
+  isActive: boolean;
   category: string;
   question: string;
   answer: string;
@@ -28,11 +36,15 @@ export function QnATable({ searchValue }: QnATableProps) {
     error,
   } = useQARecommendations(hotelId || undefined);
 
+  // Get the update mutation
+  const updateQARecommendation = useUpdateQARecommendation();
+
   // Transform and filter Q&A data
   const qnaData = useMemo(() => {
     const transformedData: QnATableData[] = qnaItems.map((item) => ({
       id: item.id,
       status: item.is_active ? "Active" : "Inactive",
+      isActive: item.is_active,
       category: item.category || "N/A",
       type: item.type || "N/A",
       question: item.question || "N/A",
@@ -63,6 +75,17 @@ export function QnATable({ searchValue }: QnATableProps) {
       key: "status",
       label: "Status",
       sortable: true,
+      render: (_value, row) => (
+        <StatusBadge
+          status={row.isActive ? "active" : "inactive"}
+          onToggle={async (newStatus) => {
+            await updateQARecommendation.mutateAsync({
+              id: row.id,
+              updates: { is_active: newStatus },
+            });
+          }}
+        />
+      ),
     },
     {
       key: "category",

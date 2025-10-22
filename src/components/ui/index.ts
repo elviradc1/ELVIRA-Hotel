@@ -18,3 +18,6 @@ export * from "./cards";
 
 // Navigation
 export * from "./navigation";
+
+// Badges
+export * from "./badges";

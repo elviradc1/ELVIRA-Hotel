@@ -1,6 +1,13 @@
 import { useMemo } from "react";
-import { Table, type TableColumn } from "../../../../../components/ui";
-import { useAmenities } from "../../../../../hooks/amenities/amenities/useAmenities";
+import {
+  Table,
+  type TableColumn,
+  StatusBadge,
+} from "../../../../../components/ui";
+import {
+  useAmenities,
+  useUpdateAmenity,
+} from "../../../../../hooks/amenities/amenities/useAmenities";
 import { useHotelId } from "../../../../../hooks/useHotelContext";
 import type { Database } from "../../../../../types/database";
 
@@ -9,6 +16,7 @@ type AmenityRow = Database["public"]["Tables"]["amenities"]["Row"];
 interface Amenity extends Record<string, unknown> {
   id: string;
   status: string;
+  isActive: boolean;
   amenity: string;
   category: string;
   price: string;
@@ -28,12 +36,29 @@ export function AmenitiesTable({ searchValue }: AmenitiesTableProps) {
     error,
   } = useAmenities(hotelId || undefined);
 
+  // Get the update mutation
+  const updateAmenity = useUpdateAmenity();
+
+  // Handle status toggle
+  const handleStatusToggle = async (id: string, newStatus: boolean) => {
+    await updateAmenity.mutateAsync({
+      id,
+      updates: { is_active: newStatus },
+    });
+  };
+
   // Define table columns for amenities
   const amenityColumns: TableColumn<Amenity>[] = [
     {
       key: "status",
       label: "Status",
       sortable: true,
+      render: (_value, row) => (
+        <StatusBadge
+          status={row.isActive ? "active" : "inactive"}
+          onToggle={(newStatus) => handleStatusToggle(row.id, newStatus)}
+        />
+      ),
     },
     {
       key: "amenity",
@@ -73,6 +98,7 @@ export function AmenitiesTable({ searchValue }: AmenitiesTableProps) {
       .map((amenity: AmenityRow) => ({
         id: amenity.id,
         status: amenity.is_active ? "Active" : "Inactive",
+        isActive: amenity.is_active,
         amenity: amenity.name,
         category: amenity.category,
         price: `$${amenity.price.toFixed(2)}`,

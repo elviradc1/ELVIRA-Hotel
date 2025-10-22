@@ -1,6 +1,13 @@
 import { useMemo } from "react";
-import { Table, type TableColumn } from "../../../../components/ui";
-import { useEmergencyContacts } from "../../../../hooks/emergency-contacts/useEmergencyContacts";
+import {
+  Table,
+  type TableColumn,
+  StatusBadge,
+} from "../../../../components/ui";
+import {
+  useEmergencyContacts,
+  useUpdateEmergencyContact,
+} from "../../../../hooks/emergency-contacts/useEmergencyContacts";
 import { useHotelId } from "../../../../hooks/useHotelContext";
 import type { Database } from "../../../../types/database";
 
@@ -10,6 +17,7 @@ type EmergencyContactRow =
 interface EmergencyContact extends Record<string, unknown> {
   id: string;
   status: string;
+  isActive: boolean;
   contactName: string;
   contactPhone: string;
   created: string;
@@ -31,12 +39,26 @@ export function EmergencyContactsTable({
     error,
   } = useEmergencyContacts(hotelId || undefined);
 
+  // Get the update mutation
+  const updateEmergencyContact = useUpdateEmergencyContact();
+
   // Define table columns for emergency contacts
   const columns: TableColumn<EmergencyContact>[] = [
     {
       key: "status",
       label: "Status",
       sortable: true,
+      render: (_value, row) => (
+        <StatusBadge
+          status={row.isActive ? "active" : "inactive"}
+          onToggle={async (newStatus) => {
+            await updateEmergencyContact.mutateAsync({
+              id: row.id,
+              updates: { is_active: newStatus },
+            });
+          }}
+        />
+      ),
     },
     {
       key: "contactName",
@@ -74,6 +96,7 @@ export function EmergencyContactsTable({
       .map((contact: EmergencyContactRow) => ({
         id: contact.id,
         status: contact.is_active ? "Active" : "Inactive",
+        isActive: contact.is_active,
         contactName: contact.contact_name,
         contactPhone: contact.phone_number,
         created: contact.created_at

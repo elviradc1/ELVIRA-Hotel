@@ -1,6 +1,13 @@
 import { useMemo } from "react";
-import { Table, type TableColumn } from "../../../../components/ui";
-import { useAnnouncements } from "../../../../hooks/announcements/useAnnouncements";
+import {
+  Table,
+  type TableColumn,
+  StatusBadge,
+} from "../../../../components/ui";
+import {
+  useAnnouncements,
+  useUpdateAnnouncement,
+} from "../../../../hooks/announcements/useAnnouncements";
 import { useHotelId } from "../../../../hooks/useHotelContext";
 import type { Database } from "../../../../types/database";
 
@@ -9,6 +16,7 @@ type AnnouncementRow = Database["public"]["Tables"]["announcements"]["Row"];
 interface Announcement extends Record<string, unknown> {
   id: string;
   status: string;
+  isActive: boolean;
   title: string;
   description: string;
   created: string;
@@ -28,12 +36,26 @@ export function AnnouncementsTable({ searchValue }: AnnouncementsTableProps) {
     error,
   } = useAnnouncements(hotelId || undefined);
 
+  // Get the update mutation
+  const updateAnnouncement = useUpdateAnnouncement();
+
   // Define table columns for announcements
   const columns: TableColumn<Announcement>[] = [
     {
       key: "status",
       label: "Status",
       sortable: true,
+      render: (_value, row) => (
+        <StatusBadge
+          status={row.isActive ? "active" : "inactive"}
+          onToggle={async (newStatus) => {
+            await updateAnnouncement.mutateAsync({
+              id: row.id,
+              updates: { is_active: newStatus },
+            });
+          }}
+        />
+      ),
     },
     {
       key: "title",
@@ -71,6 +93,7 @@ export function AnnouncementsTable({ searchValue }: AnnouncementsTableProps) {
       .map((announcement: AnnouncementRow) => ({
         id: announcement.id,
         status: announcement.is_active ? "Active" : "Inactive",
+        isActive: announcement.is_active,
         title: announcement.title,
         description: announcement.description,
         created: announcement.created_at

@@ -1,6 +1,13 @@
 import { useMemo } from "react";
-import { Table, type TableColumn } from "../../../../../components/ui";
-import { useMenuItems } from "../../../../../hooks/hotel-restaurant/menu-items/useMenuItems";
+import {
+  Table,
+  type TableColumn,
+  StatusBadge,
+} from "../../../../../components/ui";
+import {
+  useMenuItems,
+  useUpdateMenuItem,
+} from "../../../../../hooks/hotel-restaurant/menu-items/useMenuItems";
 import { useHotelId } from "../../../../../hooks/useHotelContext";
 import type { Database } from "../../../../../types/database";
 
@@ -9,6 +16,7 @@ type MenuItemRow = Database["public"]["Tables"]["menu_items"]["Row"];
 interface MenuItem extends Record<string, unknown> {
   id: string;
   status: string;
+  isActive: boolean;
   item: string;
   category: string;
   restaurant: string;
@@ -29,12 +37,26 @@ export function MenuItemsTable({ searchValue }: MenuItemsTableProps) {
     error,
   } = useMenuItems(hotelId || undefined);
 
+  // Get the update mutation
+  const updateMenuItem = useUpdateMenuItem();
+
   // Define table columns for menu items
   const columns: TableColumn<MenuItem>[] = [
     {
       key: "status",
       label: "Status",
       sortable: true,
+      render: (_value, row) => (
+        <StatusBadge
+          status={row.isActive ? "active" : "inactive"}
+          onToggle={async (newStatus) => {
+            await updateMenuItem.mutateAsync({
+              id: row.id,
+              updates: { is_active: newStatus },
+            });
+          }}
+        />
+      ),
     },
     {
       key: "item",
@@ -79,6 +101,7 @@ export function MenuItemsTable({ searchValue }: MenuItemsTableProps) {
       .map((item: MenuItemRow) => ({
         id: item.id,
         status: item.is_active ? "Active" : "Inactive",
+        isActive: item.is_active,
         item: item.name,
         category: item.category,
         restaurant:
