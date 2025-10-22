@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Layout } from "../../components/Layout";
 import { HotelProvider } from "../../contexts/HotelContext";
 import { useFilteredMenuItems } from "../../hooks";
+import { useCurrentUserHotel } from "../../hooks/useCurrentUserHotel";
 import {
   Overview,
   HotelStaff,
@@ -44,8 +45,18 @@ const componentMap = {
 
 // Inner dashboard component that uses hotel context
 function DashboardContent({ user, onSignOut }: HotelDashboardProps) {
+  console.log("🟢 HotelDashboard: Rendering dashboard content");
+
   const [activeMenuItem, setActiveMenuItem] = useState("overview");
   const { menuItems } = useFilteredMenuItems();
+  const { data: hotelInfo } = useCurrentUserHotel();
+
+  console.log(
+    "🟢 HotelDashboard: Menu items:",
+    menuItems.length,
+    "Active:",
+    activeMenuItem
+  );
 
   // Real-time subscriptions are now handled by individual module hooks
   // Each module (staff, chat, guests, etc.) has its own real-time subscription
@@ -68,6 +79,7 @@ function DashboardContent({ user, onSignOut }: HotelDashboardProps) {
       activeMenuItem={effectiveMenuItem}
       onMenuItemChange={setActiveMenuItem}
       collapsible={true}
+      hotelName={hotelInfo?.hotel?.name}
     >
       {activeComponent}
     </Layout>

@@ -3,6 +3,11 @@ import { TabsWithSearch, type TabItem } from "../../../components/ui";
 import { Restaurants } from "./restaurants";
 import { MenuItems } from "./menu-items";
 import { RestaurantOrders } from "./orders";
+import {
+  PageContent,
+  PageHeader,
+  TableContainer,
+} from "../../../components/shared/page-layouts";
 
 export function HotelRestaurant() {
   const [activeTab, setActiveTab] = useState("restaurants");
@@ -96,30 +101,26 @@ export function HotelRestaurant() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <PageContent>
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-4">
-          <div className="flex items-center">
-            <svg
-              className="w-6 h-6 text-gray-600 mr-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
-              />
-            </svg>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Hotel Restaurant
-            </h1>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Hotel Restaurant"
+        icon={
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
+            />
+          </svg>
+        }
+      />
 
       {/* Tabs with Search */}
       <TabsWithSearch
@@ -133,7 +134,7 @@ export function HotelRestaurant() {
       />
 
       {/* Content Area */}
-      <div className="bg-white">{getTabContent()}</div>
-    </div>
+      <TableContainer>{getTabContent()}</TableContainer>
+    </PageContent>
   );
 }

@@ -22,14 +22,15 @@ export function Input({
   const hasError = !!error;
 
   const inputStyles = `
-    block w-full px-3 py-2 border rounded-full shadow-sm
+    block w-full px-3 py-2 border rounded-full
     focus:outline-none focus:ring-2 focus:ring-offset-2
     disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed
-    transition-colors duration-200
+    transition-all duration-200
+    placeholder:text-gray-400
     ${
       hasError
-        ? "border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500"
-        : "border-gray-300 focus:ring-emerald-500 focus:border-emerald-500"
+        ? "border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500 shadow-sm"
+        : "border-gray-300 focus:ring-emerald-500 focus:border-emerald-500 shadow-md hover:shadow-lg focus:shadow-lg"
     }
     ${leftIcon ? "pl-10" : ""}
     ${rightIcon ? "pr-10" : ""}

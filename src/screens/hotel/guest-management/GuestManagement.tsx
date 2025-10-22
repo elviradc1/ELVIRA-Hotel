@@ -1,16 +1,16 @@
 import { useState, useMemo } from "react";
-import {
-  Table,
-  type TableColumn,
-  SearchBox,
-  StatusBadge,
-  Button,
-} from "../../../components/ui";
+import { Table, type TableColumn, StatusBadge } from "../../../components/ui";
 import {
   useGuests,
   useUpdateGuest,
 } from "../../../hooks/guest-management/useGuests";
 import { useHotelContext } from "../../../hooks/useHotelContext";
+import {
+  PageContent,
+  PageHeader,
+  PageToolbar,
+  TableContainer,
+} from "../../../components/shared/page-layouts";
 
 interface GuestTableData extends Record<string, unknown> {
   id: string;
@@ -153,70 +153,42 @@ export function GuestManagement({
   ];
 
   return (
-    <div className="p-6">
-      <div className="flex items-center mb-6">
-        <svg
-          className="w-6 h-6 text-gray-600 mr-3"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-          />
-        </svg>
-        <h1 className="text-2xl font-bold text-gray-900">Guest Management</h1>
-      </div>
+    <PageContent>
+      <PageHeader
+        title="Guest Management"
+        icon={
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+            />
+          </svg>
+        }
+      />
+
+      {/* Toolbar with Search and Actions */}
+      <PageToolbar
+        description="Manage hotel guests, track room assignments, and monitor guest preferences and status."
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
+        searchPlaceholder="Search guests by name, room, or email..."
+        onSearchClear={handleSearchClear}
+        buttonLabel="Add Guest"
+        onButtonClick={() => {
+          // TODO: Open add guest modal
+          console.log("Add Guest clicked");
+        }}
+      />
 
       {/* Guest Management Table */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <p className="text-gray-500">
-            Manage hotel guests, track room assignments, and monitor guest
-            preferences and status.
-          </p>
-
-          <div className="flex items-center gap-3">
-            {/* Add Guest Button */}
-            <Button
-              variant="primary"
-              size="md"
-              onClick={() => {
-                // TODO: Open add guest modal
-                console.log("Add Guest clicked");
-              }}
-            >
-              <svg
-                className="w-4 h-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              Add Guest
-            </Button>
-
-            {/* Search Box */}
-            <div className="w-80">
-              <SearchBox
-                value={searchValue}
-                onChange={setSearchValue}
-                placeholder="Search guests by name, room, or email..."
-                onClear={handleSearchClear}
-              />
-            </div>
-          </div>
-        </div>
-
+      <TableContainer>
         {searchValue && (
           <p className="text-sm text-gray-600 mb-4">
             Searching for: "{searchValue}"
@@ -237,7 +209,7 @@ export function GuestManagement({
           loading={isLoading}
           emptyMessage="No guests found. Guest information will appear here once check-ins begin."
         />
-      </div>
-    </div>
+      </TableContainer>
+    </PageContent>
   );
 }

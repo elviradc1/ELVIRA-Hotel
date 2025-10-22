@@ -2,6 +2,26 @@ import { useMemo } from "react";
 import { type TableColumn, DataTable } from "../../../../../components/ui";
 import { useCurrentHotelStaff } from "../../../../../hooks/hotel-staff";
 
+interface StaffData {
+  id: string;
+  position: string;
+  department: string;
+  status: string;
+  employee_id: string;
+  hire_date: string;
+  hotel_staff_personal_data?: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone_number?: string | null;
+    date_of_birth?: string | null;
+    address?: string | null;
+    city?: string | null;
+    zip_code?: string | null;
+    country?: string | null;
+  };
+}
+
 // Type for the transformed staff data
 interface StaffMember extends Record<string, unknown> {
   id: string;
@@ -13,13 +33,15 @@ interface StaffMember extends Record<string, unknown> {
   fullName: string;
   email: string;
   phoneNumber: string;
+  rawData: StaffData;
 }
 
 interface StaffTableProps {
   searchValue: string;
+  onRowClick?: (staff: StaffData) => void;
 }
 
-export function StaffTable({ searchValue }: StaffTableProps) {
+export function StaffTable({ searchValue, onRowClick }: StaffTableProps) {
   const { data: staffData, isLoading, error } = useCurrentHotelStaff();
 
   // Define table columns
@@ -100,6 +122,7 @@ export function StaffTable({ searchValue }: StaffTableProps) {
           fullName: `${firstName} ${lastName}`.trim() || "N/A",
           email: personalData?.email || "N/A",
           phoneNumber: personalData?.phone_number || "N/A",
+          rawData: staff as StaffData,
         } as StaffMember;
       });
     },
@@ -128,6 +151,7 @@ export function StaffTable({ searchValue }: StaffTableProps) {
       summaryLabel="Total staff members"
       showPagination
       itemsPerPage={10}
+      onRowClick={(row) => onRowClick?.(row.rawData)}
     />
   );
 }

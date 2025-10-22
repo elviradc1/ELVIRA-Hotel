@@ -1,6 +1,23 @@
 import { useMemo } from "react";
 import { type TableColumn, DataTable } from "../../../../../components/ui";
 import { useCurrentHotelTasks } from "../../../../../hooks/hotel-staff";
+import type { Database } from "../../../../../types/database";
+
+type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
+
+// Extended type with staff relationship
+interface TaskWithStaff extends TaskRow {
+  assigned_staff?: {
+    id: string;
+    position: string;
+    department: string;
+    hotel_staff_personal_data?: {
+      first_name: string;
+      last_name: string;
+      email: string;
+    };
+  };
+}
 
 // Type for the transformed task data
 interface Task extends Record<string, unknown> {
@@ -11,13 +28,15 @@ interface Task extends Record<string, unknown> {
   status: string;
   assignedTo: string;
   dueDate: string;
+  rawData: TaskWithStaff;
 }
 
 interface TasksTableProps {
   searchValue: string;
+  onRowClick?: (task: TaskWithStaff) => void;
 }
 
-export function TasksTable({ searchValue }: TasksTableProps) {
+export function TasksTable({ searchValue, onRowClick }: TasksTableProps) {
   const { data: tasksData, isLoading, error } = useCurrentHotelTasks();
 
   // Define table columns
@@ -125,6 +144,7 @@ export function TasksTable({ searchValue }: TasksTableProps) {
           dueDate: task.due_date
             ? new Date(task.due_date).toLocaleDateString()
             : "No due date",
+          rawData: task,
         } as Task;
       });
     },
@@ -147,6 +167,7 @@ export function TasksTable({ searchValue }: TasksTableProps) {
       summaryLabel="Total tasks"
       showPagination
       itemsPerPage={10}
+      onRowClick={(row) => onRowClick?.(row.rawData)}
     />
   );
 }

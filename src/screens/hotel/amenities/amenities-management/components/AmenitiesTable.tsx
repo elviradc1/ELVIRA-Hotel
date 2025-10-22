@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   Table,
   type TableColumn,
@@ -14,6 +14,7 @@ import { useHotelId } from "../../../../../hooks/useHotelContext";
 import { usePagination } from "../../../../../hooks";
 import { AmenityDetailModal } from "./amenity-detail-modal";
 import { AddAmenityModal } from "./add-amenity-modal";
+import { useItemTableModals } from "../../../../../components/shared/tables/useItemTableModals";
 import type { Database } from "../../../../../types/database";
 
 type AmenityRow = Database["public"]["Tables"]["amenities"]["Row"];
@@ -35,16 +36,22 @@ interface AmenitiesTableProps {
 
 export function AmenitiesTable({ searchValue }: AmenitiesTableProps) {
   const hotelId = useHotelId();
-  const [selectedAmenity, setSelectedAmenity] = useState<AmenityRow | null>(
-    null
-  );
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [amenityToEdit, setAmenityToEdit] = useState<AmenityRow | null>(null);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [amenityToDelete, setAmenityToDelete] = useState<AmenityRow | null>(
-    null
-  );
+
+  // Use shared modal state management hook
+  const {
+    selectedItem: selectedAmenity,
+    isDetailModalOpen,
+    openDetailModal,
+    closeDetailModal,
+    itemToEdit: amenityToEdit,
+    isEditModalOpen,
+    closeEditModal,
+    itemToDelete: amenityToDelete,
+    isDeleteConfirmOpen,
+    closeDeleteConfirm,
+    handleEdit,
+    handleDelete,
+  } = useItemTableModals<AmenityRow>();
 
   // Fetch amenities using the hook
   const {
@@ -69,33 +76,13 @@ export function AmenitiesTable({ searchValue }: AmenitiesTableProps) {
   const handleRowClick = (row: Amenity) => {
     const fullAmenity = amenities?.find((item) => item.id === row.id);
     if (fullAmenity) {
-      setSelectedAmenity(fullAmenity);
-      setIsDetailModalOpen(true);
+      openDetailModal(fullAmenity);
     }
   };
 
-  const handleCloseModal = () => {
-    setIsDetailModalOpen(false);
-    setSelectedAmenity(null);
-  };
+  const handleCloseModal = closeDetailModal;
 
-  // Edit handler: open edit modal
-  const handleEdit = () => {
-    if (selectedAmenity) {
-      setAmenityToEdit(selectedAmenity);
-      setIsEditModalOpen(true);
-      setIsDetailModalOpen(false);
-    }
-  };
-
-  // Delete handler: open confirmation modal
-  const handleDelete = () => {
-    if (selectedAmenity) {
-      setAmenityToDelete(selectedAmenity);
-      setIsDeleteConfirmOpen(true);
-      setIsDetailModalOpen(false);
-    }
-  };
+  // Edit and delete handlers are now provided by the hook
 
   // Confirm delete action
   const confirmDelete = () => {
@@ -104,8 +91,7 @@ export function AmenitiesTable({ searchValue }: AmenitiesTableProps) {
         { id: amenityToDelete.id, hotelId },
         {
           onSuccess: () => {
-            setIsDeleteConfirmOpen(false);
-            setAmenityToDelete(null);
+            closeDeleteConfirm();
           },
         }
       );
@@ -292,20 +278,14 @@ export function AmenitiesTable({ searchValue }: AmenitiesTableProps) {
         confirmText="Delete"
         variant="danger"
         onConfirm={confirmDelete}
-        onClose={() => {
-          setIsDeleteConfirmOpen(false);
-          setAmenityToDelete(null);
-        }}
+        onClose={closeDeleteConfirm}
         loading={deleteAmenity.isPending}
       />
 
       {/* Edit Amenity Modal */}
       <AddAmenityModal
         isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setAmenityToEdit(null);
-        }}
+        onClose={closeEditModal}
         amenity={amenityToEdit}
       />
     </div>

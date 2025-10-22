@@ -2,6 +2,11 @@ import { useState } from "react";
 import { TabsWithSearch, type TabItem } from "../../../components/ui";
 import { AmenitiesManagement } from "./amenities-management";
 import { AmenityOrders } from "./orders";
+import {
+  PageContent,
+  PageHeader,
+  TableContainer,
+} from "../../../components/shared/page-layouts";
 
 export function Amenities() {
   const [activeTab, setActiveTab] = useState("amenities");
@@ -72,29 +77,28 @@ export function Amenities() {
         return null;
     }
   };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <PageContent>
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-4">
-          <div className="flex items-center">
-            <svg
-              className="w-6 h-6 text-gray-600 mr-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"
-              />
-            </svg>
-            <h1 className="text-2xl font-bold text-gray-900">Amenities</h1>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Amenities"
+        icon={
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"
+            />
+          </svg>
+        }
+      />
 
       {/* Tabs with Search */}
       <TabsWithSearch
@@ -108,7 +112,7 @@ export function Amenities() {
       />
 
       {/* Content Area */}
-      <div className="bg-white">{getTabContent()}</div>
-    </div>
+      <TableContainer>{getTabContent()}</TableContainer>
+    </PageContent>
   );
 }

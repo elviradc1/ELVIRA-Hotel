@@ -2,6 +2,11 @@ import { useState } from "react";
 import { TabsWithSearch, type TabItem } from "../../../components/ui";
 import { Products } from "./products";
 import { ShopOrders } from "./orders";
+import {
+  PageContent,
+  PageHeader,
+  TableContainer,
+} from "../../../components/shared/page-layouts";
 
 export function HotelShop() {
   const [activeTab, setActiveTab] = useState("products");
@@ -74,28 +79,26 @@ export function HotelShop() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <PageContent>
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-4">
-          <div className="flex items-center">
-            <svg
-              className="w-6 h-6 text-gray-600 mr-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 12H6L5 9z"
-              />
-            </svg>
-            <h1 className="text-2xl font-bold text-gray-900">Hotel Shop</h1>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Hotel Shop"
+        icon={
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 12H6L5 9z"
+            />
+          </svg>
+        }
+      />
 
       {/* Tabs with Search */}
       <TabsWithSearch
@@ -109,7 +112,7 @@ export function HotelShop() {
       />
 
       {/* Content Area */}
-      <div className="bg-white">{getTabContent()}</div>
-    </div>
+      <TableContainer>{getTabContent()}</TableContainer>
+    </PageContent>
   );
 }

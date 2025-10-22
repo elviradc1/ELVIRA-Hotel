@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   Table,
   type TableColumn,
@@ -14,6 +14,7 @@ import { useHotelId } from "../../../../../hooks/useHotelContext";
 import { usePagination } from "../../../../../hooks";
 import { ProductDetailModal } from "./product-detail-modal";
 import { AddProductModal } from "./add-product-modal";
+import { useItemTableModals } from "../../../../../components/shared/tables/useItemTableModals";
 import type { Database } from "../../../../../types/database";
 
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
@@ -36,16 +37,22 @@ interface ProductsTableProps {
 
 export function ProductsTable({ searchValue }: ProductsTableProps) {
   const hotelId = useHotelId();
-  const [selectedProduct, setSelectedProduct] = useState<ProductRow | null>(
-    null
-  );
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [productToEdit, setProductToEdit] = useState<ProductRow | null>(null);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [productToDelete, setProductToDelete] = useState<ProductRow | null>(
-    null
-  );
+
+  // Use shared modal state management hook
+  const {
+    selectedItem: selectedProduct,
+    isDetailModalOpen,
+    openDetailModal,
+    closeDetailModal,
+    itemToEdit: productToEdit,
+    isEditModalOpen,
+    closeEditModal,
+    itemToDelete: productToDelete,
+    isDeleteConfirmOpen,
+    closeDeleteConfirm,
+    handleEdit,
+    handleDelete,
+  } = useItemTableModals<ProductRow>();
 
   // Fetch products using the hook
   const {
@@ -62,34 +69,16 @@ export function ProductsTable({ searchValue }: ProductsTableProps) {
   const handleRowClick = (row: Product) => {
     const fullProduct = products?.find((item) => item.id === row.id);
     if (fullProduct) {
-      setSelectedProduct(fullProduct);
-      setIsDetailModalOpen(true);
+      openDetailModal(fullProduct);
     }
   };
 
-  // Close detail modal
-  const handleCloseModal = () => {
-    setIsDetailModalOpen(false);
-    setSelectedProduct(null);
-  };
+  // Close detail modal (alias for consistency)
+  const handleCloseModal = closeDetailModal;
 
-  // Edit handler: open edit modal (placeholder, can be wired to actual edit modal)
-  const handleEdit = () => {
-    if (selectedProduct) {
-      setProductToEdit(selectedProduct);
-      setIsEditModalOpen(true);
-      setIsDetailModalOpen(false);
-    }
-  };
+  // Edit handler is now provided by the hook (handleEdit)
 
-  // Delete handler: open confirmation modal
-  const handleDelete = () => {
-    if (selectedProduct) {
-      setProductToDelete(selectedProduct);
-      setIsDeleteConfirmOpen(true);
-      setIsDetailModalOpen(false);
-    }
-  };
+  // Delete handler is now provided by the hook (handleDelete)
 
   // Confirm delete action
   const confirmDelete = () => {
@@ -98,8 +87,7 @@ export function ProductsTable({ searchValue }: ProductsTableProps) {
         { id: productToDelete.id, hotelId },
         {
           onSuccess: () => {
-            setIsDeleteConfirmOpen(false);
-            setProductToDelete(null);
+            closeDeleteConfirm();
           },
         }
       );
@@ -299,20 +287,14 @@ export function ProductsTable({ searchValue }: ProductsTableProps) {
         confirmText="Delete"
         variant="danger"
         onConfirm={confirmDelete}
-        onClose={() => {
-          setIsDeleteConfirmOpen(false);
-          setProductToDelete(null);
-        }}
+        onClose={closeDeleteConfirm}
         loading={deleteProduct.isPending}
       />
 
       {/* Edit Product Modal */}
       <AddProductModal
         isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setProductToEdit(null);
-        }}
+        onClose={closeEditModal}
         product={productToEdit}
       />
     </div>

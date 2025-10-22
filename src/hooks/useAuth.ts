@@ -7,33 +7,83 @@ export function useAuth() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  console.log("🔵 useAuth: Hook initialized, loading:", loading, "user:", user);
+
   useEffect(() => {
+    console.log("🔵 useAuth: useEffect running - checking session");
+
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        authService.getUserProfile(session.user.id).then((profile) => {
-          setUser(profile);
-          setLoading(false);
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        console.log("🔵 useAuth: getSession result:", {
+          hasSession: !!session,
+          hasUser: !!session?.user,
+          userId: session?.user?.id,
         });
-      } else {
+
+        if (session?.user) {
+          console.log(
+            "🔵 useAuth: Fetching user profile for:",
+            session.user.id
+          );
+          authService
+            .getUserProfile(session.user.id)
+            .then((profile) => {
+              console.log("🔵 useAuth: Got user profile:", profile);
+              setUser(profile);
+              setLoading(false);
+              console.log("🔵 useAuth: Loading set to false");
+            })
+            .catch((error) => {
+              console.error("🔴 useAuth: Error fetching user profile:", error);
+              setLoading(false);
+            });
+        } else {
+          console.log("🔵 useAuth: No session found, loading set to false");
+          setLoading(false);
+        }
+      })
+      .catch((error) => {
+        console.error("🔴 useAuth: Error getting session:", error);
         setLoading(false);
-      }
-    });
+      });
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log(
+        "🔵 useAuth: Auth state changed:",
+        event,
+        "hasSession:",
+        !!session
+      );
+
       if (event === "SIGNED_IN" && session?.user) {
-        authService.getUserProfile(session.user.id).then((profile) => {
-          setUser(profile);
-        });
+        console.log("🔵 useAuth: User signed in, fetching profile");
+        authService
+          .getUserProfile(session.user.id)
+          .then((profile) => {
+            console.log("🔵 useAuth: Profile fetched after sign in:", profile);
+            setUser(profile);
+          })
+          .catch((error) => {
+            console.error(
+              "🔴 useAuth: Error fetching profile after sign in:",
+              error
+            );
+          });
       } else if (event === "SIGNED_OUT") {
+        console.log("🔵 useAuth: User signed out");
         setUser(null);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log("🔵 useAuth: Cleaning up subscription");
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {

@@ -20,15 +20,15 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-500 hover:border-emerald-600 focus:ring-emerald-300",
+    "bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-500 hover:border-emerald-600 focus:ring-emerald-300 shadow-md hover:shadow-lg",
   secondary:
-    "bg-gray-100 hover:bg-gray-200 text-gray-900 border-gray-300 hover:border-gray-400 focus:ring-gray-300",
+    "bg-gray-100 hover:bg-gray-200 text-gray-900 border-gray-300 hover:border-gray-400 focus:ring-gray-300 shadow-sm hover:shadow-md",
   danger:
-    "bg-red-500 hover:bg-red-600 text-white border-red-500 hover:border-red-600 focus:ring-red-300",
+    "bg-red-500 hover:bg-red-600 text-white border-red-500 hover:border-red-600 focus:ring-red-300 shadow-md hover:shadow-lg",
   ghost:
     "bg-transparent hover:bg-gray-100 text-gray-700 border-transparent hover:border-gray-300 focus:ring-gray-300",
   outline:
-    "bg-transparent hover:bg-emerald-50 text-emerald-600 border-emerald-300 hover:border-emerald-400 focus:ring-emerald-300",
+    "bg-transparent hover:bg-emerald-50 text-emerald-600 border-emerald-300 hover:border-emerald-400 focus:ring-emerald-300 shadow-sm hover:shadow-md",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -51,7 +51,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   const baseStyles =
-    "font-medium rounded-3xl border transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center";
+    "font-medium rounded-3xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center";
 
   const widthStyle = fullWidth ? "w-full" : "";
 

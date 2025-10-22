@@ -34,6 +34,9 @@ interface DataTableProps<
   // Pagination
   showPagination?: boolean;
   itemsPerPage?: number;
+
+  // Row click handler
+  onRowClick?: (row: TData) => void;
 }
 /**
  * Generic data table component that handles:
@@ -61,6 +64,7 @@ export function DataTable<
   summaryLabel = "Total",
   showPagination = false,
   itemsPerPage = 10,
+  onRowClick,
 }: DataTableProps<TData, TRawData>) {
   // Transform and filter data
   const processedData = useMemo(() => {
@@ -141,6 +145,7 @@ export function DataTable<
         totalItems={processedData.length}
         itemsPerPage={pagination.itemsPerPage}
         onPageChange={pagination.setCurrentPage}
+        onRowClick={onRowClick}
       />
 
       {/* Summary */}

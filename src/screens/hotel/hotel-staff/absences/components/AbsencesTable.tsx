@@ -1,6 +1,24 @@
 import { useMemo } from "react";
 import { type TableColumn, DataTable } from "../../../../../components/ui";
 import { useCurrentHotelAbsences } from "../../../../../hooks/hotel-staff";
+import type { Database } from "../../../../../types/database";
+
+type AbsenceRequestRow =
+  Database["public"]["Tables"]["absence_requests"]["Row"];
+
+// Extended type with staff relationship
+interface AbsenceWithStaff extends AbsenceRequestRow {
+  staff?: {
+    id: string;
+    position: string;
+    department: string;
+    hotel_staff_personal_data?: {
+      first_name: string;
+      last_name: string;
+      email: string;
+    };
+  };
+}
 
 // Type for the transformed absence data
 interface AbsenceRequest extends Record<string, unknown> {
@@ -11,13 +29,15 @@ interface AbsenceRequest extends Record<string, unknown> {
   endDate: string;
   status: string;
   days: number;
+  rawData: AbsenceWithStaff;
 }
 
 interface AbsencesTableProps {
   searchValue: string;
+  onRowClick?: (absence: AbsenceWithStaff) => void;
 }
 
-export function AbsencesTable({ searchValue }: AbsencesTableProps) {
+export function AbsencesTable({ searchValue, onRowClick }: AbsencesTableProps) {
   const { data: absencesData, isLoading, error } = useCurrentHotelAbsences();
 
   // Define table columns
@@ -123,6 +143,7 @@ export function AbsencesTable({ searchValue }: AbsencesTableProps) {
           endDate: end.toLocaleDateString(),
           status: absence.status,
           days,
+          rawData: absence,
         } as AbsenceRequest;
       });
     },
@@ -145,6 +166,7 @@ export function AbsencesTable({ searchValue }: AbsencesTableProps) {
       summaryLabel="Total absence requests"
       showPagination
       itemsPerPage={10}
+      onRowClick={(row) => onRowClick?.(row.rawData)}
     />
   );
 }

@@ -1,7 +1,12 @@
 import { useState } from "react";
-import { SearchBox, Button } from "../../../components/ui";
 import { AnnouncementsTable, AddAnnouncementModal } from "./components";
 import type { Database } from "../../../types/database";
+import {
+  PageContent,
+  PageHeader,
+  PageToolbar,
+  TableContainer,
+} from "../../../components/shared/page-layouts";
 
 type Announcement = Database["public"]["Tables"]["announcements"]["Row"];
 
@@ -27,67 +32,40 @@ export function Announcements() {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center mb-6">
-        <svg
-          className="w-6 h-6 text-gray-600 mr-3"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"
-          />
-        </svg>
-        <h1 className="text-2xl font-bold text-gray-900">Announcements</h1>
-      </div>
+    <PageContent>
+      <PageHeader
+        title="Announcements"
+        icon={
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"
+            />
+          </svg>
+        }
+      />
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <p className="text-gray-500">
-            Create and manage hotel announcements for guests and staff.
-          </p>
+      {/* Toolbar with Search and Actions */}
+      <PageToolbar
+        description="Create and manage hotel announcements for guests and staff."
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
+        searchPlaceholder="Search announcements by title or description..."
+        onSearchClear={handleSearchClear}
+        buttonLabel="Add Announcement"
+        onButtonClick={() => setIsAddModalOpen(true)}
+      />
 
-          <div className="flex items-center gap-3">
-            {/* Add Announcement Button */}
-            <Button
-              variant="primary"
-              size="md"
-              onClick={() => setIsAddModalOpen(true)}
-            >
-              <svg
-                className="w-4 h-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              Add Announcement
-            </Button>
-
-            {/* Search Box */}
-            <div className="w-80">
-              <SearchBox
-                value={searchValue}
-                onChange={setSearchValue}
-                placeholder="Search announcements by title or description..."
-                onClear={handleSearchClear}
-              />
-            </div>
-          </div>
-        </div>
-
+      <TableContainer>
         <AnnouncementsTable searchValue={searchValue} onEdit={handleEdit} />
-      </div>
+      </TableContainer>
 
       {/* Add/Edit Announcement Modal */}
       <AddAnnouncementModal
@@ -95,6 +73,6 @@ export function Announcements() {
         onClose={handleCloseModal}
         editData={editAnnouncement}
       />
-    </div>
+    </PageContent>
   );
 }

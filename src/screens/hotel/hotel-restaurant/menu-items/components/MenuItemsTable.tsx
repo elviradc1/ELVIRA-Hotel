@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   Table,
   type TableColumn,
@@ -14,6 +14,7 @@ import { useRestaurants } from "../../../../../hooks/hotel-restaurant/restaurant
 import { useHotelId, usePagination } from "../../../../../hooks";
 import { MenuItemDetailModal } from "./menu-item-detail-modal";
 import { AddMenuItemModal } from "./add-menu-item-modal";
+import { useItemTableModals } from "../../../../../components/shared/tables/useItemTableModals";
 import type { Database } from "../../../../../types/database";
 
 type MenuItemRow = Database["public"]["Tables"]["menu_items"]["Row"];
@@ -36,18 +37,22 @@ interface MenuItemsTableProps {
 
 export function MenuItemsTable({ searchValue }: MenuItemsTableProps) {
   const hotelId = useHotelId();
-  const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItemRow | null>(
-    null
-  );
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [menuItemToEdit, setMenuItemToEdit] = useState<MenuItemRow | null>(
-    null
-  );
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [menuItemToDelete, setMenuItemToDelete] = useState<MenuItemRow | null>(
-    null
-  );
+
+  // Use shared modal state management hook
+  const {
+    selectedItem: selectedMenuItem,
+    isDetailModalOpen,
+    openDetailModal,
+    closeDetailModal,
+    itemToEdit: menuItemToEdit,
+    isEditModalOpen,
+    closeEditModal,
+    itemToDelete: menuItemToDelete,
+    isDeleteConfirmOpen,
+    closeDeleteConfirm,
+    handleEdit,
+    handleDelete,
+  } = useItemTableModals<MenuItemRow>();
 
   // Fetch menu items using the hook
   const {
@@ -73,31 +78,13 @@ export function MenuItemsTable({ searchValue }: MenuItemsTableProps) {
   const handleRowClick = (row: MenuItem) => {
     const fullMenuItem = menuItems?.find((item) => item.id === row.id);
     if (fullMenuItem) {
-      setSelectedMenuItem(fullMenuItem);
-      setIsDetailModalOpen(true);
+      openDetailModal(fullMenuItem);
     }
   };
 
-  const handleCloseModal = () => {
-    setIsDetailModalOpen(false);
-    setSelectedMenuItem(null);
-  };
+  const handleCloseModal = closeDetailModal;
 
-  const handleEdit = () => {
-    if (selectedMenuItem) {
-      setMenuItemToEdit(selectedMenuItem);
-      setIsEditModalOpen(true);
-      handleCloseModal();
-    }
-  };
-
-  const handleDelete = () => {
-    if (selectedMenuItem) {
-      setMenuItemToDelete(selectedMenuItem);
-      setIsDeleteConfirmOpen(true);
-      handleCloseModal();
-    }
-  };
+  // Edit and delete handlers are now provided by the hook
 
   const confirmDelete = () => {
     if (menuItemToDelete && hotelId) {
@@ -105,8 +92,7 @@ export function MenuItemsTable({ searchValue }: MenuItemsTableProps) {
         { id: menuItemToDelete.id, hotelId },
         {
           onSuccess: () => {
-            setIsDeleteConfirmOpen(false);
-            setMenuItemToDelete(null);
+            closeDeleteConfirm();
           },
         }
       );
@@ -310,20 +296,14 @@ export function MenuItemsTable({ searchValue }: MenuItemsTableProps) {
       {/* Edit Modal */}
       <AddMenuItemModal
         isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setMenuItemToEdit(null);
-        }}
+        onClose={closeEditModal}
         menuItem={menuItemToEdit}
       />
 
       {/* Delete Confirmation Modal */}
       <ConfirmationModal
         isOpen={isDeleteConfirmOpen}
-        onClose={() => {
-          setIsDeleteConfirmOpen(false);
-          setMenuItemToDelete(null);
-        }}
+        onClose={closeDeleteConfirm}
         onConfirm={confirmDelete}
         title="Delete Menu Item"
         message={`Are you sure you want to delete "${menuItemToDelete?.name}"? This action cannot be undone.`}

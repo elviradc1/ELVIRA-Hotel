@@ -3,6 +3,12 @@ import { TabsWithoutSearch, type TabItem } from "../../../components/ui";
 import { GuestCommunication, StaffCommunication } from "./components";
 import { useConversations } from "../../../hooks/chat-management/useConversations";
 import { useHotelId } from "../../../hooks/useHotelContext";
+import {
+  PageContent,
+  TableContainer,
+  PageHeader,
+} from "../../../components/shared/page-layouts";
+import { colors, typography, spacing } from "../../../utils/theme";
 
 export function ChatManagement() {
   const [activeTab, setActiveTab] = useState("guest-communication");
@@ -66,47 +72,59 @@ export function ChatManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
+    <PageContent>
+      {/* Standardized Page Header */}
+      <PageHeader
+        title="Chat Management"
+        icon={
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            />
+          </svg>
+        }
+        rightContent={
+          <div className="flex items-center" style={{ gap: spacing[2] }}>
             <div className="flex items-center">
-              <svg
-                className="w-6 h-6 text-gray-600 mr-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              <div
+                className="w-2 h-2 rounded-full animate-pulse"
+                style={{ backgroundColor: colors.success.DEFAULT }}
+              ></div>
+              <span
+                style={{
+                  marginLeft: spacing[2],
+                  fontSize: typography.fontSize.sm,
+                  color: colors.text.secondary,
+                }}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
-              </svg>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Chat Management
-              </h1>
+                Real-time enabled
+              </span>
             </div>
-
-            {/* Real-time status indicator */}
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="ml-2 text-sm text-gray-600">
-                  Real-time enabled
-                </span>
-              </div>
-              {conversations && (
-                <span className="bg-emerald-100 text-emerald-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                  {conversations.length} active conversations
-                </span>
-              )}
-            </div>
+            {conversations && (
+              <span
+                style={{
+                  backgroundColor: colors.primary[100],
+                  color: colors.primary[800],
+                  fontSize: typography.fontSize.xs,
+                  fontWeight: typography.fontWeight.medium,
+                  padding: `${spacing[1]} ${spacing[2.5]}`,
+                  borderRadius: "9999px",
+                }}
+              >
+                {conversations.length} active conversations
+              </span>
+            )}
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Tabs without Search */}
       <TabsWithoutSearch
@@ -116,7 +134,7 @@ export function ChatManagement() {
       />
 
       {/* Content Area */}
-      <div className="flex-1 p-6 bg-gray-50">{getTabContent()}</div>
-    </div>
+      <TableContainer>{getTabContent()}</TableContainer>
+    </PageContent>
   );
 }

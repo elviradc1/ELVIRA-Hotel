@@ -1,1 +1,3 @@
 export { FetchGooglePlacesModal } from "./FetchGooglePlacesModal";
+export { DistanceFilter } from "./DistanceFilter";
+export { PlaceDetailsModal } from "./PlaceDetailsModal";

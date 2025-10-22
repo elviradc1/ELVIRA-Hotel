@@ -4,6 +4,11 @@ import { StaffManagement } from "./staff-management";
 import { TaskAssignment } from "./task-assignment";
 import { Schedule } from "./schedule";
 import { Absences } from "./absences";
+import {
+  PageContent,
+  PageHeader,
+  TableContainer,
+} from "../../../components/shared/page-layouts";
 
 export function HotelStaff() {
   const [activeTab, setActiveTab] = useState("staff-management");
@@ -118,28 +123,26 @@ export function HotelStaff() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <PageContent>
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-4">
-          <div className="flex items-center">
-            <svg
-              className="w-6 h-6 text-gray-600 mr-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
-              />
-            </svg>
-            <h1 className="text-2xl font-bold text-gray-900">Hotel Staff</h1>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Hotel Staff"
+        icon={
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+            />
+          </svg>
+        }
+      />
 
       {/* Tabs with Search */}
       <TabsWithSearch
@@ -153,7 +156,7 @@ export function HotelStaff() {
       />
 
       {/* Content Area */}
-      <div className="bg-white">{getTabContent()}</div>
-    </div>
+      <TableContainer>{getTabContent()}</TableContainer>
+    </PageContent>
   );
 }

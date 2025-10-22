@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ProductsTable, AddProductModal } from "./components";
-import { Button } from "../../../../components/ui";
+import { ManagementPageHeader } from "../../../../components/shared";
 
 interface ProductsProps {
   searchValue: string;
@@ -11,36 +11,12 @@ export function Products({ searchValue }: ProductsProps) {
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">
-            Products Management
-          </h2>
-          <p className="text-gray-500">
-            Manage hotel shop products, inventory, and pricing.
-          </p>
-        </div>
-        <Button
-          variant="primary"
-          size="md"
-          onClick={() => setIsAddModalOpen(true)}
-        >
-          <svg
-            className="w-4 h-4 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          Add Product
-        </Button>
-      </div>
+      <ManagementPageHeader
+        title="Products Management"
+        description="Manage hotel shop products, inventory, and pricing."
+        buttonLabel="Add Product"
+        onButtonClick={() => setIsAddModalOpen(true)}
+      />
 
       <ProductsTable searchValue={searchValue} />
 

@@ -3,6 +3,11 @@ import { TabsWithSearch, type TabItem } from "../../../components/ui";
 import { Gastronomy } from "./gastronomy";
 import { Tours } from "./tours";
 import { Wellness } from "./wellness";
+import {
+  PageContent,
+  PageHeader,
+  TableContainer,
+} from "../../../components/shared/page-layouts";
 
 export function ThirdPartyManagement() {
   const [activeTab, setActiveTab] = useState("gastronomy");
@@ -102,30 +107,26 @@ export function ThirdPartyManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <PageContent>
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-4">
-          <div className="flex items-center">
-            <svg
-              className="w-6 h-6 text-gray-600 mr-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-              />
-            </svg>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Third Party Management
-            </h1>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Third Party Management"
+        icon={
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+            />
+          </svg>
+        }
+      />
 
       {/* Tabs with Search */}
       <TabsWithSearch
@@ -139,7 +140,7 @@ export function ThirdPartyManagement() {
       />
 
       {/* Content Area */}
-      <div className="bg-white">{getTabContent()}</div>
-    </div>
+      <TableContainer>{getTabContent()}</TableContainer>
+    </PageContent>
   );
 }

@@ -1,4 +1,5 @@
 import { AmenityOrdersTable } from "./components";
+import { OrdersPageHeader } from "../../../../components/shared";
 
 interface AmenityOrdersProps {
   searchValue: string;
@@ -7,12 +8,10 @@ interface AmenityOrdersProps {
 export function AmenityOrders({ searchValue }: AmenityOrdersProps) {
   return (
     <div className="p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">
-        Amenity Orders
-      </h2>
-      <p className="text-gray-500">
-        Track and manage guest orders for amenities and services.
-      </p>
+      <OrdersPageHeader
+        title="Amenity Orders"
+        description="Track and manage guest orders for amenities and services."
+      />
 
       <AmenityOrdersTable searchValue={searchValue} />
     </div>

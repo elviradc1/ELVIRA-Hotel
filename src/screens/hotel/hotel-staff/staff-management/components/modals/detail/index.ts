@@ -1,0 +1,1 @@
+export { StaffDetailModal } from "./StaffDetailModal";

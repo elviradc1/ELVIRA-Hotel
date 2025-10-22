@@ -2,6 +2,7 @@ import type { TableColumn, TableAction } from "./types";
 import { LoadingState } from "../states";
 import { TableHeader, TableBody } from "./components";
 import { Pagination } from "./Pagination";
+import { useState, useMemo } from "react";
 
 interface TableProps<T = Record<string, unknown>> {
   columns: TableColumn<T>[];
@@ -15,12 +16,8 @@ interface TableProps<T = Record<string, unknown>> {
   emptyMessage?: string;
   className?: string;
   // Pagination props
-  showPagination?: boolean;
-  currentPage?: number;
-  totalPages?: number;
-  totalItems?: number;
   itemsPerPage?: number;
-  onPageChange?: (page: number) => void;
+  disablePagination?: boolean;
 }
 
 export function Table<T extends Record<string, unknown>>({
@@ -34,13 +31,35 @@ export function Table<T extends Record<string, unknown>>({
   onRowClick,
   emptyMessage = "No data available",
   className = "",
-  showPagination = false,
-  currentPage = 1,
-  totalPages = 1,
-  totalItems,
-  itemsPerPage,
-  onPageChange,
+  itemsPerPage = 10,
+  disablePagination = false,
 }: TableProps<T>) {
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Calculate pagination
+  const totalItems = data.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const showPagination = !disablePagination && totalItems > itemsPerPage;
+
+  // Get current page data
+  const paginatedData = useMemo(() => {
+    if (disablePagination) return data;
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return data.slice(startIndex, endIndex);
+  }, [data, currentPage, itemsPerPage, disablePagination]);
+
+  // Reset to page 1 when data changes
+  useMemo(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [totalPages, currentPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   if (loading) {
     return <LoadingState message="Loading data..." />;
   }
@@ -58,7 +77,7 @@ export function Table<T extends Record<string, unknown>>({
             onSort={onSort}
             hasActions={actions.length > 0}
           />
-          {data.length === 0 ? (
+          {paginatedData.length === 0 ? (
             <tbody className="bg-white">
               <tr>
                 <td
@@ -71,7 +90,7 @@ export function Table<T extends Record<string, unknown>>({
             </tbody>
           ) : (
             <TableBody
-              data={data}
+              data={paginatedData}
               columns={columns}
               actions={actions}
               onRowClick={onRowClick}
@@ -80,12 +99,12 @@ export function Table<T extends Record<string, unknown>>({
         </table>
       </div>
 
-      {/* Pagination */}
-      {showPagination && onPageChange && (
+      {/* Automatic Pagination */}
+      {showPagination && (
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          onPageChange={onPageChange}
+          onPageChange={handlePageChange}
           totalItems={totalItems}
           itemsPerPage={itemsPerPage}
         />

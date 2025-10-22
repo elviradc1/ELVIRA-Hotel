@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { ReactElement } from "react";
+import { sidebarColors } from "../utils/theme";
 
 interface MenuItem {
   id: string;
@@ -17,6 +18,7 @@ interface SidebarProps {
   activeMenuItem?: string;
   onMenuItemChange?: (itemId: string) => void;
   collapsible?: boolean;
+  hotelName?: string;
 }
 
 export function Sidebar({
@@ -26,73 +28,225 @@ export function Sidebar({
   activeMenuItem = "",
   onMenuItemChange,
   collapsible = false,
+  hotelName,
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Get hotel initials from hotel name
+  const getHotelInitials = (name?: string) => {
+    if (!name) return user.role.substring(0, 2).toUpperCase();
+    return name
+      .split(" ")
+      .filter((word) => word.length > 0)
+      .map((word) => word[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase();
+  };
 
   return (
     <aside
       className={`${
         isCollapsed ? "w-20" : "w-64"
-      } bg-emerald-500 shrink-0 flex flex-col transition-all duration-300 h-screen sticky top-0`}
+      } shrink-0 flex flex-col transition-all duration-300 h-screen sticky top-0`}
+      style={{
+        background: sidebarColors.background,
+        backdropFilter: "blur(10px)",
+        backgroundColor: sidebarColors.backgroundRgba,
+        boxShadow:
+          "4px 0 24px -2px rgba(0, 0, 0, 0.12), 8px 0 16px -4px rgba(0, 0, 0, 0.08)",
+        position: "relative",
+      }}
     >
-      <div className="p-4 flex-1 overflow-y-auto">
+      {/* Collapse handle button - positioned on the right edge with fade effect */}
+      {collapsible && (
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="fixed top-4 transition-all duration-300"
+          style={{
+            left: isCollapsed ? "68px" : "244px",
+            zIndex: 9999,
+            width: "28px",
+            height: "56px",
+            background: sidebarColors.background,
+            backdropFilter: "blur(10px)",
+            borderRadius: "0 12px 12px 0",
+            border: "none",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "3px 0 12px rgba(0, 0, 0, 0.2)",
+            maskImage: "linear-gradient(to right, transparent 10%, black 40%)",
+            WebkitMaskImage:
+              "linear-gradient(to right, transparent 10%, black 40%)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "scale(1.05)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "scale(1)";
+          }}
+        >
+          <svg
+            className="w-3 h-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            style={{ color: "white" }}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={3}
+              d={isCollapsed ? "M9 5l7 7-7 7" : "M15 19l-7-7 7-7"}
+            />
+          </svg>
+        </button>
+      )}
+
+      <div
+        className={`p-4 flex-1 overflow-y-auto ${
+          isCollapsed ? "flex flex-col" : ""
+        }`}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          {!isCollapsed && (
-            <div className="text-emerald-100 text-sm">
-              {user.role.toUpperCase()} Dashboard
-            </div>
-          )}
-          {collapsible && (
-            <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="text-emerald-100 hover:text-white p-1 rounded"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+        <div className="mb-6 mt-2">
+          {!isCollapsed ? (
+            <>
+              <div
+                style={{
+                  color: sidebarColors.text,
+                  fontSize: "1rem",
+                  fontWeight: "700",
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                  fontFamily: '"Inter", sans-serif',
+                  lineHeight: "1.4",
+                  textAlign: "center",
+                  marginBottom: "1rem",
+                }}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d={isCollapsed ? "M9 5l7 7-7 7" : "M15 19l-7-7 7-7"}
-                />
-              </svg>
-            </button>
+                {hotelName || `${user.role} Dashboard`}
+              </div>
+              {/* Horizontal divider */}
+              <div
+                style={{
+                  borderTop: `1px solid ${sidebarColors.border}`,
+                  paddingTop: "0.5rem",
+                }}
+              />
+            </>
+          ) : (
+            <div
+              style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: "50%",
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto",
+                color: sidebarColors.text,
+                fontSize: "1.125rem",
+                fontWeight: "700",
+                fontFamily: '"Inter", sans-serif',
+                letterSpacing: "0.05em",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+              }}
+            >
+              {getHotelInitials(hotelName)}
+            </div>
           )}
         </div>
 
         {/* Menu Items */}
-        <nav className="space-y-2 -mr-4">
+        <nav
+          className={`-mr-4 mt-6 ${
+            isCollapsed ? "flex-1 flex flex-col justify-evenly" : "space-y-1"
+          }`}
+        >
           {menuItems.map((item) => (
             <button
               key={item.id}
               onClick={() => onMenuItemChange?.(item.id)}
-              className={`w-full flex items-center px-3 py-2 text-left transition-colors duration-200 ${
+              className={`w-full flex items-center transition-all duration-200 ${
                 activeMenuItem === item.id
-                  ? "bg-gray-50 text-gray-900 rounded-l-3xl pr-8"
-                  : "text-emerald-100 hover:bg-emerald-600 hover:text-white rounded-3xl mr-4"
+                  ? "rounded-l-xl pr-8 font-semibold"
+                  : "rounded-xl mr-4"
               }`}
+              style={{
+                padding: "0.625rem 0.875rem",
+                fontSize: "1rem",
+                fontFamily: '"Inter", sans-serif',
+                fontWeight: activeMenuItem === item.id ? "600" : "500",
+                backgroundColor:
+                  activeMenuItem === item.id
+                    ? sidebarColors.activeBg
+                    : "transparent",
+                color:
+                  activeMenuItem === item.id
+                    ? sidebarColors.activeText
+                    : sidebarColors.text,
+                boxShadow:
+                  activeMenuItem === item.id
+                    ? "0 4px 12px -2px rgba(0, 0, 0, 0.15)"
+                    : "none",
+                border: "none",
+                cursor: "pointer",
+                letterSpacing: "0.01em",
+              }}
+              onMouseEnter={(e) => {
+                if (activeMenuItem !== item.id) {
+                  e.currentTarget.style.backgroundColor = sidebarColors.hoverBg;
+                  e.currentTarget.style.color = sidebarColors.textHover;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (activeMenuItem !== item.id) {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                  e.currentTarget.style.color = sidebarColors.text;
+                }
+              }}
             >
               <span className="shrink-0">{item.icon}</span>
-              {!isCollapsed && (
-                <span className="ml-3 text-sm font-medium">{item.label}</span>
-              )}
+              {!isCollapsed && <span className="ml-3">{item.label}</span>}
             </button>
           ))}
         </nav>
       </div>
 
       {/* Sign out button at bottom of sidebar */}
-      <div className="p-4 border-t border-emerald-400">
+      <div
+        className="p-4"
+        style={{ borderTop: `1px solid ${sidebarColors.border}` }}
+      >
         <button
           onClick={onSignOut}
-          className={`w-full bg-emerald-600 hover:bg-emerald-700 text-white ${
+          className={`w-full ${
             isCollapsed ? "px-2" : "px-4"
-          } py-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-emerald-500 transition-colors duration-200`}
+          } py-3 rounded-lg font-semibold focus:outline-none transition-all duration-200`}
+          style={{
+            backgroundColor: "rgba(255, 255, 255, 0.15)",
+            color: sidebarColors.active,
+            fontSize: "0.875rem",
+            fontFamily: '"Inter", sans-serif',
+            letterSpacing: "0.01em",
+            boxShadow: "0 2px 8px -1px rgba(0, 0, 0, 0.1)",
+            border: "none",
+            cursor: "pointer",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.25)";
+            e.currentTarget.style.boxShadow =
+              "0 4px 12px -2px rgba(0, 0, 0, 0.15)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.15)";
+            e.currentTarget.style.boxShadow =
+              "0 2px 8px -1px rgba(0, 0, 0, 0.1)";
+          }}
         >
           {isCollapsed ? (
             <svg
