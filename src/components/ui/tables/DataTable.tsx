@@ -1,39 +1,46 @@
 import { useMemo } from "react";
 import { Table, type TableColumn, LoadingState, ErrorState } from "../index";
 
-interface DataTableProps<TData extends Record<string, unknown>, TRawData = TData> {
+interface DataTableProps<
+  TData extends Record<string, unknown>,
+  TRawData = TData
+> {
   // Data fetching
   data: TRawData[] | undefined;
   isLoading: boolean;
   error: Error | null;
-  
+
   // Table configuration
   columns: TableColumn<TData>[];
-  
+
   // Search
   searchValue?: string;
   searchFields?: (keyof TData)[];
   searchPlaceholder?: string;
-  
+
   // Transformation
   transformData?: (data: TRawData[]) => TData[];
-  
+
   // Messages
   emptyMessage?: string;
   loadingMessage?: string;
   errorTitle?: string;
-  
+
   // Summary
   showSummary?: boolean;
   summaryLabel?: string;
-}/**
+}
+/**
  * Generic data table component that handles:
  * - Loading and error states
  * - Search filtering across multiple fields
  * - Data transformation
  * - Summary display
  */
-export function DataTable<TData extends Record<string, unknown>>({
+export function DataTable<
+  TData extends Record<string, unknown>,
+  TRawData = TData
+>({
   data,
   isLoading,
   error,
@@ -47,13 +54,15 @@ export function DataTable<TData extends Record<string, unknown>>({
   errorTitle = "Failed to load data",
   showSummary = false,
   summaryLabel = "Total",
-}: DataTableProps<TData>) {
+}: DataTableProps<TData, TRawData>) {
   // Transform and filter data
   const processedData = useMemo(() => {
     if (!data) return [];
 
     // Apply custom transformation if provided
-    let processed = transformData ? transformData(data) : data;
+    let processed: TData[] = transformData
+      ? transformData(data)
+      : (data as unknown as TData[]);
 
     // Apply search filter
     if (searchValue && searchFields.length > 0) {

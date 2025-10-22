@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { TabsWithoutSearch, type TabItem } from "../../../components/ui";
 import { GuestCommunication, StaffCommunication } from "./components";
-import { useConversations } from "../../../hooks/useApi";
+import { useConversations } from "../../../hooks/chat-management/useConversations";
 import { useHotelId } from "../../../hooks/useHotelContext";
 
 export function ChatManagement() {

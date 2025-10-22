@@ -96,10 +96,10 @@ export function AbsencesTable({ searchValue }: AbsencesTableProps) {
 
   // Transform raw data into table format
   const transformData = useMemo(
-    () => (data: AbsenceRequest[]) => {
+    () => (data: NonNullable<typeof absencesData>) => {
       if (!data) return [];
 
-      return data.map((absence: any) => {
+      return data.map((absence) => {
         const staff = absence.staff;
         const personalData = staff?.hotel_staff_personal_data;
         const staffName = personalData
@@ -131,7 +131,7 @@ export function AbsencesTable({ searchValue }: AbsencesTableProps) {
 
   return (
     <DataTable
-      data={absencesData as any}
+      data={absencesData}
       isLoading={isLoading}
       error={error}
       columns={columns}

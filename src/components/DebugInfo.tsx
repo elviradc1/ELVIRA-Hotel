@@ -3,7 +3,7 @@ import {
   useCurrentUserHotel,
   useCurrentUserHotelId,
 } from "../hooks/useCurrentUserHotel";
-import { useCurrentHotelStaff } from "../hooks/useApi";
+import { useStaffManagement } from "../hooks/hotel-staff/staff-management/useStaffManagement";
 
 export function DebugInfo() {
   const { user, loading: authLoading } = useAuth();
@@ -21,7 +21,7 @@ export function DebugInfo() {
     data: staffData,
     isLoading: staffLoading,
     error: staffError,
-  } = useCurrentHotelStaff();
+  } = useStaffManagement();
 
   // Log current values for debugging
   console.log("🎯 DebugInfo Component Values:", {

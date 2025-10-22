@@ -103,10 +103,10 @@ export function TasksTable({ searchValue }: TasksTableProps) {
 
   // Transform raw data into table format
   const transformData = useMemo(
-    () => (data: Task[]) => {
+    () => (data: NonNullable<typeof tasksData>) => {
       if (!data) return [];
 
-      return data.map((task: any) => {
+      return data.map((task) => {
         const staff = task.assigned_staff;
         const personalData = staff?.hotel_staff_personal_data;
         const assignedName = personalData
@@ -133,7 +133,7 @@ export function TasksTable({ searchValue }: TasksTableProps) {
 
   return (
     <DataTable
-      data={tasksData as any}
+      data={tasksData}
       isLoading={isLoading}
       error={error}
       columns={columns}

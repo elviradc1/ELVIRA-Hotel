@@ -1,17 +1,12 @@
 import { Button } from "../../../../components/ui";
 import { StaffTable } from "./components";
-import { useStaffRealtime } from "../../../../hooks/useRealtime";
-import { useHotelId } from "../../../../hooks/useHotelContext";
 
 interface StaffManagementProps {
   searchValue: string;
 }
 
 export function StaffManagement({ searchValue }: StaffManagementProps) {
-  const hotelId = useHotelId();
-
-  // Enable real-time updates for staff data
-  useStaffRealtime(hotelId || undefined);
+  // Real-time updates are now handled by useStaffManagement hook (used in StaffTable)
 
   return (
     <div className="p-6">

@@ -1,17 +1,12 @@
 import { Button } from "../../../../components/ui";
 import { AbsencesTable } from "./components";
-import { useAbsenceRequestsRealtime } from "../../../../hooks/useRealtime";
-import { useHotelId } from "../../../../hooks/useHotelContext";
 
 interface AbsencesProps {
   searchValue: string;
 }
 
 export function Absences({ searchValue }: AbsencesProps) {
-  const hotelId = useHotelId();
-
-  // Enable real-time updates for absence requests data
-  useAbsenceRequestsRealtime(hotelId || undefined);
+  // Real-time updates are now handled automatically by useAbsenceRequests hook in AbsencesTable
 
   return (
     <div className="p-6">

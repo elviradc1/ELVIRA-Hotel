@@ -82,7 +82,7 @@ export function StaffTable({ searchValue }: StaffTableProps) {
 
   // Transform raw data into table format
   const transformData = useMemo(
-    () => (data: typeof staffData) => {
+    () => (data: NonNullable<typeof staffData>) => {
       if (!data) return [];
 
       return data.map((staff) => {

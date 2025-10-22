@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { useMessages, useSendMessage } from "../hooks/useApi";
-import { useChatRealtime } from "../hooks/useRealtime";
+import {
+  useMessages,
+  useSendMessage,
+} from "../hooks/chat-management/useMessages";
 import { LoadingSpinner } from "./ui";
 import type { Tables } from "../services/supabase";
 
@@ -19,10 +21,7 @@ export function RealTimeChat({
 }: RealTimeChatProps) {
   const [messageText, setMessageText] = useState("");
 
-  // Real-time message subscription
-  useChatRealtime(conversationId);
-
-  // Fetch messages with React Query
+  // Fetch messages with React Query (includes real-time subscription)
   const { data: messages, isLoading, error } = useMessages(conversationId);
 
   // Send message with optimistic updates
@@ -34,16 +33,13 @@ export function RealTimeChat({
     const newMessage = {
       conversation_id: conversationId,
       message_text: messageText,
-      sender_type: "staff",
+      sender_type: "staff" as const,
       is_read: false,
       is_translated: false,
     };
 
     try {
-      await sendMessageMutation.mutateAsync({
-        conversationId,
-        message: newMessage,
-      });
+      await sendMessageMutation.mutateAsync(newMessage);
       setMessageText("");
     } catch (error) {
       console.error("Failed to send message:", error);
