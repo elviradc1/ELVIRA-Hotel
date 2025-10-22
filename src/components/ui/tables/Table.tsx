@@ -1,6 +1,7 @@
 import type { TableColumn, TableAction } from "./types";
 import { LoadingState } from "../states";
 import { TableHeader, TableBody } from "./components";
+import { Pagination } from "./Pagination";
 
 interface TableProps<T = Record<string, unknown>> {
   columns: TableColumn<T>[];
@@ -10,8 +11,16 @@ interface TableProps<T = Record<string, unknown>> {
   sortColumn?: string;
   sortDirection?: "asc" | "desc";
   onSort?: (column: string) => void;
+  onRowClick?: (row: T) => void;
   emptyMessage?: string;
   className?: string;
+  // Pagination props
+  showPagination?: boolean;
+  currentPage?: number;
+  totalPages?: number;
+  totalItems?: number;
+  itemsPerPage?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export function Table<T extends Record<string, unknown>>({
@@ -22,8 +31,15 @@ export function Table<T extends Record<string, unknown>>({
   sortColumn,
   sortDirection,
   onSort,
+  onRowClick,
   emptyMessage = "No data available",
   className = "",
+  showPagination = false,
+  currentPage = 1,
+  totalPages = 1,
+  totalItems,
+  itemsPerPage,
+  onPageChange,
 }: TableProps<T>) {
   if (loading) {
     return <LoadingState message="Loading data..." />;
@@ -54,10 +70,26 @@ export function Table<T extends Record<string, unknown>>({
               </tr>
             </tbody>
           ) : (
-            <TableBody data={data} columns={columns} actions={actions} />
+            <TableBody
+              data={data}
+              columns={columns}
+              actions={actions}
+              onRowClick={onRowClick}
+            />
           )}
         </table>
       </div>
+
+      {/* Pagination */}
+      {showPagination && onPageChange && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+        />
+      )}
     </div>
   );
 }

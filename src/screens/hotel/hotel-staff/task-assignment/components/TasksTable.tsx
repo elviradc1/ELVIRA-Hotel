@@ -145,6 +145,8 @@ export function TasksTable({ searchValue }: TasksTableProps) {
       errorTitle="Failed to load tasks"
       showSummary
       summaryLabel="Total tasks"
+      showPagination
+      itemsPerPage={10}
     />
   );
 }

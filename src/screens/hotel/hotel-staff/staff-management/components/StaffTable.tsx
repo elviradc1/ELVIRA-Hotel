@@ -126,6 +126,8 @@ export function StaffTable({ searchValue }: StaffTableProps) {
       errorTitle="Failed to load staff members"
       showSummary
       summaryLabel="Total staff members"
+      showPagination
+      itemsPerPage={10}
     />
   );
 }

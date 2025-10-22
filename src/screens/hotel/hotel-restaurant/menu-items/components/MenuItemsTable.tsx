@@ -1,14 +1,19 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Table,
   type TableColumn,
   StatusBadge,
+  ConfirmationModal,
 } from "../../../../../components/ui";
 import {
   useMenuItems,
   useUpdateMenuItem,
+  useDeleteMenuItem,
 } from "../../../../../hooks/hotel-restaurant/menu-items/useMenuItems";
-import { useHotelId } from "../../../../../hooks/useHotelContext";
+import { useRestaurants } from "../../../../../hooks/hotel-restaurant/restaurants/useRestaurants";
+import { useHotelId, usePagination } from "../../../../../hooks";
+import { MenuItemDetailModal } from "./menu-item-detail-modal";
+import { AddMenuItemModal } from "./add-menu-item-modal";
 import type { Database } from "../../../../../types/database";
 
 type MenuItemRow = Database["public"]["Tables"]["menu_items"]["Row"];
@@ -17,10 +22,12 @@ interface MenuItem extends Record<string, unknown> {
   id: string;
   status: string;
   isActive: boolean;
+  imageUrl: string | null;
   item: string;
   category: string;
   restaurant: string;
   price: string;
+  hotelRecommended: boolean | null;
 }
 
 interface MenuItemsTableProps {
@@ -29,6 +36,18 @@ interface MenuItemsTableProps {
 
 export function MenuItemsTable({ searchValue }: MenuItemsTableProps) {
   const hotelId = useHotelId();
+  const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItemRow | null>(
+    null
+  );
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [menuItemToEdit, setMenuItemToEdit] = useState<MenuItemRow | null>(
+    null
+  );
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [menuItemToDelete, setMenuItemToDelete] = useState<MenuItemRow | null>(
+    null
+  );
 
   // Fetch menu items using the hook
   const {
@@ -37,8 +56,62 @@ export function MenuItemsTable({ searchValue }: MenuItemsTableProps) {
     error,
   } = useMenuItems(hotelId || undefined);
 
-  // Get the update mutation
+  // Fetch restaurants for name mapping
+  const { data: restaurants } = useRestaurants(hotelId || undefined);
+
+  // Get the mutations
   const updateMenuItem = useUpdateMenuItem();
+  const deleteMenuItem = useDeleteMenuItem();
+
+  // Create a map of restaurant IDs to names
+  const restaurantMap = useMemo(() => {
+    if (!restaurants) return new Map<string, string>();
+    return new Map(restaurants.map((r) => [r.id, r.name]));
+  }, [restaurants]);
+
+  // Handle row click
+  const handleRowClick = (row: MenuItem) => {
+    const fullMenuItem = menuItems?.find((item) => item.id === row.id);
+    if (fullMenuItem) {
+      setSelectedMenuItem(fullMenuItem);
+      setIsDetailModalOpen(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedMenuItem(null);
+  };
+
+  const handleEdit = () => {
+    if (selectedMenuItem) {
+      setMenuItemToEdit(selectedMenuItem);
+      setIsEditModalOpen(true);
+      handleCloseModal();
+    }
+  };
+
+  const handleDelete = () => {
+    if (selectedMenuItem) {
+      setMenuItemToDelete(selectedMenuItem);
+      setIsDeleteConfirmOpen(true);
+      handleCloseModal();
+    }
+  };
+
+  const confirmDelete = () => {
+    if (menuItemToDelete && hotelId) {
+      deleteMenuItem.mutate(
+        { id: menuItemToDelete.id, hotelId },
+        {
+          onSuccess: () => {
+            setIsDeleteConfirmOpen(false);
+            setMenuItemToDelete(null);
+          },
+        }
+      );
+    }
+  };
 
   // Define table columns for menu items
   const columns: TableColumn<MenuItem>[] = [
@@ -59,9 +132,64 @@ export function MenuItemsTable({ searchValue }: MenuItemsTableProps) {
       ),
     },
     {
+      key: "imageUrl",
+      label: "Image",
+      sortable: false,
+      render: (value) => (
+        <div className="flex items-center justify-center">
+          {value ? (
+            <img
+              src={value as string}
+              alt="Menu item"
+              className="w-12 h-12 object-cover rounded-lg border border-gray-200"
+            />
+          ) : (
+            <div className="w-12 h-12 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+              <svg
+                className="w-6 h-6 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
       key: "item",
       label: "Item",
       sortable: true,
+      render: (_value, row) => (
+        <div className="flex items-center gap-2">
+          <span>{row.item}</span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              updateMenuItem.mutate({
+                id: row.id,
+                updates: { hotel_recommended: !row.hotelRecommended },
+              });
+            }}
+            className="text-base hover:scale-110 transition-transform cursor-pointer"
+            title={
+              row.hotelRecommended
+                ? "Remove from recommended"
+                : "Mark as recommended"
+            }
+          >
+            {row.hotelRecommended ? "⭐" : "☆"}
+          </button>
+        </div>
+      ),
     },
     {
       key: "category",
@@ -98,19 +226,41 @@ export function MenuItemsTable({ searchValue }: MenuItemsTableProps) {
           false
         );
       })
-      .map((item: MenuItemRow) => ({
-        id: item.id,
-        status: item.is_active ? "Active" : "Inactive",
-        isActive: item.is_active,
-        item: item.name,
-        category: item.category,
-        restaurant:
-          item.restaurant_ids && item.restaurant_ids.length > 0
-            ? `${item.restaurant_ids.length} restaurant(s)`
-            : "All restaurants",
-        price: `$${item.price.toFixed(2)}`,
-      }));
-  }, [menuItems, searchValue]);
+      .map((item: MenuItemRow) => {
+        // Map restaurant IDs to names
+        let restaurantDisplay = "All restaurants";
+        if (item.restaurant_ids && item.restaurant_ids.length > 0) {
+          const restaurantNames = item.restaurant_ids
+            .map((id) => restaurantMap.get(id))
+            .filter((name): name is string => name !== undefined);
+
+          if (restaurantNames.length > 0) {
+            restaurantDisplay = restaurantNames.join(", ");
+          }
+        }
+
+        return {
+          id: item.id,
+          status: item.is_active ? "Active" : "Inactive",
+          isActive: item.is_active,
+          imageUrl: item.image_url,
+          item: item.name,
+          category: item.category,
+          restaurant: restaurantDisplay,
+          price: `$${item.price.toFixed(2)}`,
+          hotelRecommended: item.hotel_recommended,
+        };
+      });
+  }, [menuItems, searchValue, restaurantMap]);
+
+  // Pagination
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    itemsPerPage,
+    setCurrentPage,
+  } = usePagination<MenuItem>({ data: menuItemData, itemsPerPage: 10 });
 
   if (error) {
     return (
@@ -134,11 +284,53 @@ export function MenuItemsTable({ searchValue }: MenuItemsTableProps) {
       <div className="bg-white rounded-lg border border-gray-200">
         <Table
           columns={columns}
-          data={menuItemData}
+          data={paginatedData}
           loading={isLoading}
           emptyMessage="No menu items found. Add new menu items to get started."
+          onRowClick={handleRowClick}
+          showPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={menuItemData.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
         />
       </div>
+
+      {/* Detail Modal */}
+      <MenuItemDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseModal}
+        menuItem={selectedMenuItem}
+        restaurants={restaurantMap}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+
+      {/* Edit Modal */}
+      <AddMenuItemModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setMenuItemToEdit(null);
+        }}
+        menuItem={menuItemToEdit}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => {
+          setIsDeleteConfirmOpen(false);
+          setMenuItemToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Delete Menu Item"
+        message={`Are you sure you want to delete "${menuItemToDelete?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        variant="danger"
+        loading={deleteMenuItem.isPending}
+      />
     </div>
   );
 }

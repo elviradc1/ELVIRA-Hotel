@@ -6,15 +6,20 @@ interface TableRowProps<T = Record<string, unknown>> {
   item: T;
   columns: TableColumn<T>[];
   actions: TableAction<T>[];
+  onRowClick?: (row: T) => void;
 }
 
 export function TableRow<T extends Record<string, unknown>>({
   item,
   columns,
   actions,
+  onRowClick,
 }: TableRowProps<T>) {
   return (
-    <tr className="hover:bg-gray-50">
+    <tr
+      className={`hover:bg-gray-50 ${onRowClick ? "cursor-pointer" : ""}`}
+      onClick={() => onRowClick?.(item)}
+    >
       {columns.map((column) => (
         <TableCell key={column.key} column={column} item={item} />
       ))}

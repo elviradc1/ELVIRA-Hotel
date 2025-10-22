@@ -1,4 +1,5 @@
 import { Table, type TableColumn } from "../../../../../components/ui";
+import { usePagination } from "../../../../../hooks";
 
 interface RecommendedPlace extends Record<string, unknown> {
   id: string;
@@ -48,6 +49,18 @@ export function RecommendedPlacesTable({
   // Empty data array - no mock data
   const placesData: RecommendedPlace[] = [];
 
+  // Pagination
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    itemsPerPage,
+    setCurrentPage,
+  } = usePagination<RecommendedPlace>({
+    data: placesData,
+    itemsPerPage: 10,
+  });
+
   return (
     <div className="mt-6">
       {searchValue && (
@@ -60,8 +73,14 @@ export function RecommendedPlacesTable({
       <div className="bg-white rounded-lg border border-gray-200">
         <Table
           columns={columns}
-          data={placesData}
+          data={paginatedData}
           emptyMessage="No recommended places found. Add new places to get started."
+          showPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={placesData.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
         />
       </div>
     </div>

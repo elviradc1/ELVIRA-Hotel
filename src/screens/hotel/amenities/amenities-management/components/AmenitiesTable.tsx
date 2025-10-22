@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Table,
   type TableColumn,
@@ -9,6 +9,8 @@ import {
   useUpdateAmenity,
 } from "../../../../../hooks/amenities/amenities/useAmenities";
 import { useHotelId } from "../../../../../hooks/useHotelContext";
+import { usePagination } from "../../../../../hooks";
+import { AmenityDetailModal } from "./amenity-detail-modal";
 import type { Database } from "../../../../../types/database";
 
 type AmenityRow = Database["public"]["Tables"]["amenities"]["Row"];
@@ -17,9 +19,11 @@ interface Amenity extends Record<string, unknown> {
   id: string;
   status: string;
   isActive: boolean;
+  imageUrl: string | null;
   amenity: string;
   category: string;
   price: string;
+  hotelRecommended: boolean | null;
 }
 
 interface AmenitiesTableProps {
@@ -28,6 +32,10 @@ interface AmenitiesTableProps {
 
 export function AmenitiesTable({ searchValue }: AmenitiesTableProps) {
   const hotelId = useHotelId();
+  const [selectedAmenity, setSelectedAmenity] = useState<AmenityRow | null>(
+    null
+  );
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   // Fetch amenities using the hook
   const {
@@ -47,6 +55,20 @@ export function AmenitiesTable({ searchValue }: AmenitiesTableProps) {
     });
   };
 
+  // Handle row click
+  const handleRowClick = (row: Amenity) => {
+    const fullAmenity = amenities?.find((item) => item.id === row.id);
+    if (fullAmenity) {
+      setSelectedAmenity(fullAmenity);
+      setIsDetailModalOpen(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedAmenity(null);
+  };
+
   // Define table columns for amenities
   const amenityColumns: TableColumn<Amenity>[] = [
     {
@@ -61,9 +83,64 @@ export function AmenitiesTable({ searchValue }: AmenitiesTableProps) {
       ),
     },
     {
+      key: "imageUrl",
+      label: "Image",
+      sortable: false,
+      render: (value) => (
+        <div className="flex items-center justify-center">
+          {value ? (
+            <img
+              src={value as string}
+              alt="Amenity"
+              className="w-12 h-12 object-cover rounded-lg border border-gray-200"
+            />
+          ) : (
+            <div className="w-12 h-12 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+              <svg
+                className="w-6 h-6 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
       key: "amenity",
       label: "Amenity",
       sortable: true,
+      render: (_value, row) => (
+        <div className="flex items-center gap-2">
+          <span>{row.amenity}</span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              updateAmenity.mutate({
+                id: row.id,
+                updates: { recommended: !row.hotelRecommended },
+              });
+            }}
+            className="text-base hover:scale-110 transition-transform cursor-pointer"
+            title={
+              row.hotelRecommended
+                ? "Remove from recommended"
+                : "Mark as recommended"
+            }
+          >
+            {row.hotelRecommended ? "⭐" : "☆"}
+          </button>
+        </div>
+      ),
     },
     {
       key: "category",
@@ -99,11 +176,22 @@ export function AmenitiesTable({ searchValue }: AmenitiesTableProps) {
         id: amenity.id,
         status: amenity.is_active ? "Active" : "Inactive",
         isActive: amenity.is_active,
+        imageUrl: amenity.image_url,
         amenity: amenity.name,
         category: amenity.category,
         price: `$${amenity.price.toFixed(2)}`,
+        hotelRecommended: amenity.recommended,
       }));
   }, [amenities, searchValue]);
+
+  // Pagination
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    itemsPerPage,
+    setCurrentPage,
+  } = usePagination<Amenity>({ data: amenityData, itemsPerPage: 10 });
 
   if (error) {
     return (
@@ -127,15 +215,29 @@ export function AmenitiesTable({ searchValue }: AmenitiesTableProps) {
       <div className="bg-white rounded-lg border border-gray-200">
         <Table
           columns={amenityColumns}
-          data={amenityData}
+          data={paginatedData}
           loading={isLoading}
           emptyMessage={
             searchValue
               ? `No amenities found matching "${searchValue}".`
               : "No amenities found. Add new amenities to get started."
           }
+          onRowClick={handleRowClick}
+          showPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={amenityData.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
         />
       </div>
+
+      {/* Detail Modal */}
+      <AmenityDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseModal}
+        amenity={selectedAmenity}
+      />
     </div>
   );
 }

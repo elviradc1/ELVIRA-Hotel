@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { SearchBox } from "../../../components/ui";
-import { AnnouncementsTable } from "./components";
+import { SearchBox, Button } from "../../../components/ui";
+import { AnnouncementsTable, AddAnnouncementModal } from "./components";
 
 export function Announcements() {
   const [searchValue, setSearchValue] = useState("");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const handleSearchClear = () => {
     setSearchValue("");
@@ -34,19 +35,49 @@ export function Announcements() {
             Create and manage hotel announcements for guests and staff.
           </p>
 
-          {/* Search Box */}
-          <div className="w-80">
-            <SearchBox
-              value={searchValue}
-              onChange={setSearchValue}
-              placeholder="Search announcements by title or description..."
-              onClear={handleSearchClear}
-            />
+          <div className="flex items-center gap-3">
+            {/* Add Announcement Button */}
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => setIsAddModalOpen(true)}
+            >
+              <svg
+                className="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Add Announcement
+            </Button>
+
+            {/* Search Box */}
+            <div className="w-80">
+              <SearchBox
+                value={searchValue}
+                onChange={setSearchValue}
+                placeholder="Search announcements by title or description..."
+                onClear={handleSearchClear}
+              />
+            </div>
           </div>
         </div>
 
         <AnnouncementsTable searchValue={searchValue} />
       </div>
+
+      {/* Add Announcement Modal */}
+      <AddAnnouncementModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+      />
     </div>
   );
 }

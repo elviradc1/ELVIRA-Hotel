@@ -5,6 +5,7 @@ import {
   type AmenityRequestWithDetails,
 } from "../../../../../hooks/amenities/amenity-requests/useAmenityRequests";
 import { useHotelId } from "../../../../../hooks/useHotelContext";
+import { usePagination } from "../../../../../hooks";
 
 interface AmenityOrder extends Record<string, unknown> {
   id: string;
@@ -96,6 +97,15 @@ export function AmenityOrdersTable({ searchValue }: AmenityOrdersTableProps) {
       }));
   }, [amenityRequests, searchValue]);
 
+  // Pagination
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    itemsPerPage,
+    setCurrentPage,
+  } = usePagination<AmenityOrder>({ data: orderData, itemsPerPage: 10 });
+
   if (error) {
     return (
       <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
@@ -118,9 +128,15 @@ export function AmenityOrdersTable({ searchValue }: AmenityOrdersTableProps) {
       <div className="bg-white rounded-lg border border-gray-200">
         <Table
           columns={orderColumns}
-          data={orderData}
+          data={paginatedData}
           loading={isLoading}
           emptyMessage="No amenity orders found. Orders will appear here once guests start requesting amenities."
+          showPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={orderData.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
         />
       </div>
     </div>

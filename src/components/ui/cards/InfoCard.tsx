@@ -17,25 +17,25 @@ export function InfoCard({
   actions,
 }: InfoCardProps) {
   return (
-    <Card>
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center">
+    <Card padding="sm">
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex items-center gap-2">
           {icon && (
-            <div className="mr-3 p-2 bg-emerald-100 rounded-xl">
-              <div className="text-emerald-600">{icon}</div>
+            <div className="p-1.5 bg-emerald-100 rounded-lg">
+              <div className="text-emerald-600 text-sm">{icon}</div>
             </div>
           )}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
             {description && (
-              <p className="text-sm text-gray-600">{description}</p>
+              <p className="text-xs text-gray-600">{description}</p>
             )}
           </div>
         </div>
         {actions && <div className="flex space-x-2">{actions}</div>}
       </div>
 
-      {children && <div className="mt-4">{children}</div>}
+      {children && <div className="mt-2">{children}</div>}
     </Card>
   );
 }

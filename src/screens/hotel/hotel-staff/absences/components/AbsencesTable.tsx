@@ -143,6 +143,8 @@ export function AbsencesTable({ searchValue }: AbsencesTableProps) {
       errorTitle="Failed to load absence requests"
       showSummary
       summaryLabel="Total absence requests"
+      showPagination
+      itemsPerPage={10}
     />
   );
 }

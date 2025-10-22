@@ -8,7 +8,7 @@ import {
   useAnnouncements,
   useUpdateAnnouncement,
 } from "../../../../hooks/announcements/useAnnouncements";
-import { useHotelId } from "../../../../hooks/useHotelContext";
+import { useHotelId, usePagination } from "../../../../hooks";
 import type { Database } from "../../../../types/database";
 
 type AnnouncementRow = Database["public"]["Tables"]["announcements"]["Row"];
@@ -102,6 +102,15 @@ export function AnnouncementsTable({ searchValue }: AnnouncementsTableProps) {
       }));
   }, [announcements, searchValue]);
 
+  // Pagination
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    itemsPerPage,
+    setCurrentPage,
+  } = usePagination<Announcement>({ data: announcementData, itemsPerPage: 10 });
+
   if (error) {
     return (
       <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
@@ -125,13 +134,19 @@ export function AnnouncementsTable({ searchValue }: AnnouncementsTableProps) {
       <div className="bg-white rounded-lg border border-gray-200">
         <Table
           columns={columns}
-          data={announcementData}
+          data={paginatedData}
           loading={isLoading}
           emptyMessage={
             searchValue
               ? `No announcements found matching "${searchValue}".`
               : "No announcements found. Create new announcements to get started."
           }
+          showPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={announcementData.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
         />
       </div>
     </div>

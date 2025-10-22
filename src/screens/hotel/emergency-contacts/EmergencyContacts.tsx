@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { SearchBox } from "../../../components/ui";
-import { EmergencyContactsTable } from "./components";
+import { SearchBox, Button } from "../../../components/ui";
+import { EmergencyContactsTable, AddEmergencyContactModal } from "./components";
 
 export function EmergencyContacts() {
   const [searchValue, setSearchValue] = useState("");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const handleSearchClear = () => {
     setSearchValue("");
@@ -35,19 +36,49 @@ export function EmergencyContacts() {
             operations.
           </p>
 
-          {/* Search Box */}
-          <div className="w-80">
-            <SearchBox
-              value={searchValue}
-              onChange={setSearchValue}
-              placeholder="Search emergency contacts by name or phone..."
-              onClear={handleSearchClear}
-            />
+          <div className="flex items-center gap-3">
+            {/* Add Emergency Contact Button */}
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => setIsAddModalOpen(true)}
+            >
+              <svg
+                className="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Add Contact
+            </Button>
+
+            {/* Search Box */}
+            <div className="w-80">
+              <SearchBox
+                value={searchValue}
+                onChange={setSearchValue}
+                placeholder="Search emergency contacts by name or phone..."
+                onClear={handleSearchClear}
+              />
+            </div>
           </div>
         </div>
 
         <EmergencyContactsTable searchValue={searchValue} />
       </div>
+
+      {/* Add Emergency Contact Modal */}
+      <AddEmergencyContactModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+      />
     </div>
   );
 }

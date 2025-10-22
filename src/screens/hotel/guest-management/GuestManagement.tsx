@@ -1,12 +1,22 @@
 import { useState, useMemo } from "react";
-import { Table, type TableColumn, SearchBox } from "../../../components/ui";
-import { useGuests } from "../../../hooks/guest-management/useGuests";
+import {
+  Table,
+  type TableColumn,
+  SearchBox,
+  StatusBadge,
+  Button,
+} from "../../../components/ui";
+import {
+  useGuests,
+  useUpdateGuest,
+} from "../../../hooks/guest-management/useGuests";
 import { useHotelContext } from "../../../hooks/useHotelContext";
 
 interface GuestTableData extends Record<string, unknown> {
   id: string;
   room: string;
   status: string;
+  isActive: boolean;
   dnd: string;
   firstName: string;
   lastName: string;
@@ -35,6 +45,9 @@ export function GuestManagement({
     error,
   } = useGuests(hotelId || undefined);
 
+  // Get the update mutation
+  const updateGuest = useUpdateGuest();
+
   // Use external search value if provided (for tab-based usage), otherwise use internal state
   const searchValue =
     externalSearchValue !== undefined
@@ -53,6 +66,7 @@ export function GuestManagement({
       id: guest.id,
       room: guest.room_number,
       status: guest.is_active ? "Active" : "Inactive",
+      isActive: guest.is_active,
       dnd: guest.dnd_status ? "Yes" : "No",
       firstName: guest.guest_personal_data?.first_name || "N/A",
       lastName: guest.guest_personal_data?.last_name || "N/A",
@@ -89,6 +103,17 @@ export function GuestManagement({
       key: "status",
       label: "Status",
       sortable: true,
+      render: (_value, row) => (
+        <StatusBadge
+          status={row.isActive ? "active" : "inactive"}
+          onToggle={async (newStatus) => {
+            await updateGuest.mutateAsync({
+              id: row.id,
+              updates: { is_active: newStatus },
+            });
+          }}
+        />
+      ),
     },
     {
       key: "dnd",
@@ -154,14 +179,41 @@ export function GuestManagement({
             preferences and status.
           </p>
 
-          {/* Search Box */}
-          <div className="w-80">
-            <SearchBox
-              value={searchValue}
-              onChange={setSearchValue}
-              placeholder="Search guests by name, room, or email..."
-              onClear={handleSearchClear}
-            />
+          <div className="flex items-center gap-3">
+            {/* Add Guest Button */}
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => {
+                // TODO: Open add guest modal
+                console.log("Add Guest clicked");
+              }}
+            >
+              <svg
+                className="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Add Guest
+            </Button>
+
+            {/* Search Box */}
+            <div className="w-80">
+              <SearchBox
+                value={searchValue}
+                onChange={setSearchValue}
+                placeholder="Search guests by name, room, or email..."
+                onClear={handleSearchClear}
+              />
+            </div>
           </div>
         </div>
 

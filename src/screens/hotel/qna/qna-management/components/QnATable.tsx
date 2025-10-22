@@ -8,7 +8,7 @@ import {
   useQARecommendations,
   useUpdateQARecommendation,
 } from "../../../../../hooks/qna/useQARecommendations";
-import { useHotelContext } from "../../../../../hooks/useHotelContext";
+import { useHotelContext, usePagination } from "../../../../../hooks";
 
 interface QnATableData extends Record<string, unknown> {
   id: string;
@@ -114,6 +114,15 @@ export function QnATable({ searchValue }: QnATableProps) {
     },
   ];
 
+  // Pagination
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    itemsPerPage,
+    setCurrentPage,
+  } = usePagination<QnATableData>({ data: qnaData, itemsPerPage: 10 });
+
   return (
     <div className="mt-6">
       {searchValue && (
@@ -134,9 +143,15 @@ export function QnATable({ searchValue }: QnATableProps) {
       <div className="bg-white rounded-lg border border-gray-200">
         <Table
           columns={columns}
-          data={qnaData}
+          data={paginatedData}
           loading={isLoading}
           emptyMessage="No Q&A items found. Add new questions and answers to get started."
+          showPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={qnaData.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
         />
       </div>
     </div>

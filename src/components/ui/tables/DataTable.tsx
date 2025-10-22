@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Table, type TableColumn, LoadingState, ErrorState } from "../index";
+import { usePagination } from "../../../hooks";
 
 interface DataTableProps<
   TData extends Record<string, unknown>,
@@ -29,6 +30,10 @@ interface DataTableProps<
   // Summary
   showSummary?: boolean;
   summaryLabel?: string;
+
+  // Pagination
+  showPagination?: boolean;
+  itemsPerPage?: number;
 }
 /**
  * Generic data table component that handles:
@@ -54,6 +59,8 @@ export function DataTable<
   errorTitle = "Failed to load data",
   showSummary = false,
   summaryLabel = "Total",
+  showPagination = false,
+  itemsPerPage = 10,
 }: DataTableProps<TData, TRawData>) {
   // Transform and filter data
   const processedData = useMemo(() => {
@@ -78,6 +85,13 @@ export function DataTable<
 
     return processed;
   }, [data, searchValue, searchFields, transformData]);
+
+  // Apply pagination if enabled
+  const pagination = usePagination<TData>({
+    data: processedData,
+    itemsPerPage,
+  });
+  const displayData = showPagination ? pagination.paginatedData : processedData;
 
   // Loading state
   if (isLoading) {
@@ -115,12 +129,18 @@ export function DataTable<
       {/* Table */}
       <Table
         columns={columns}
-        data={processedData}
+        data={displayData}
         emptyMessage={
           searchValue
             ? `No results found matching "${searchValue}"`
             : emptyMessage
         }
+        showPagination={showPagination}
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalItems={processedData.length}
+        itemsPerPage={pagination.itemsPerPage}
+        onPageChange={pagination.setCurrentPage}
       />
 
       {/* Summary */}

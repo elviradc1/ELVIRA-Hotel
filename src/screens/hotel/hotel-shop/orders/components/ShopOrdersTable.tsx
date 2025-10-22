@@ -5,6 +5,7 @@ import {
   type ShopOrderWithDetails,
 } from "../../../../../hooks/hotel-shop/shop-orders/useShopOrders";
 import { useHotelId } from "../../../../../hooks/useHotelContext";
+import { usePagination } from "../../../../../hooks";
 
 interface ShopOrder extends Record<string, unknown> {
   id: string;
@@ -98,6 +99,15 @@ export function ShopOrdersTable({ searchValue }: ShopOrdersTableProps) {
       }));
   }, [shopOrders, searchValue]);
 
+  // Pagination
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    itemsPerPage,
+    setCurrentPage,
+  } = usePagination<ShopOrder>({ data: orderData, itemsPerPage: 10 });
+
   if (error) {
     return (
       <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
@@ -120,9 +130,15 @@ export function ShopOrdersTable({ searchValue }: ShopOrdersTableProps) {
       <div className="bg-white rounded-lg border border-gray-200">
         <Table
           columns={columns}
-          data={orderData}
+          data={paginatedData}
           loading={isLoading}
           emptyMessage="No shop orders found. Orders will appear here once guests start purchasing items."
+          showPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={orderData.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
         />
       </div>
     </div>

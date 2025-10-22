@@ -9,6 +9,7 @@ import {
   useUpdateEmergencyContact,
 } from "../../../../hooks/emergency-contacts/useEmergencyContacts";
 import { useHotelId } from "../../../../hooks/useHotelContext";
+import { usePagination } from "../../../../hooks";
 import type { Database } from "../../../../types/database";
 
 type EmergencyContactRow =
@@ -105,6 +106,18 @@ export function EmergencyContactsTable({
       }));
   }, [emergencyContacts, searchValue]);
 
+  // Pagination
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    itemsPerPage,
+    setCurrentPage,
+  } = usePagination<EmergencyContact>({
+    data: contactData,
+    itemsPerPage: 10,
+  });
+
   if (error) {
     return (
       <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
@@ -127,13 +140,19 @@ export function EmergencyContactsTable({
       <div className="bg-white rounded-lg border border-gray-200">
         <Table
           columns={columns}
-          data={contactData}
+          data={paginatedData}
           loading={isLoading}
           emptyMessage={
             searchValue
               ? `No emergency contacts found matching "${searchValue}".`
               : "No emergency contacts found. Add new contacts to get started."
           }
+          showPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={contactData.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
         />
       </div>
     </div>

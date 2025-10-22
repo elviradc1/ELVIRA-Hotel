@@ -5,6 +5,7 @@ import {
   type DineInOrderWithDetails,
 } from "../../../../../hooks/hotel-restaurant/dine-in-orders/useDineInOrders";
 import { useHotelId } from "../../../../../hooks/useHotelContext";
+import { usePagination } from "../../../../../hooks";
 
 interface RestaurantOrder extends Record<string, unknown> {
   id: string;
@@ -116,6 +117,15 @@ export function RestaurantOrdersTable({
       });
   }, [dineInOrders, searchValue]);
 
+  // Pagination
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    itemsPerPage,
+    setCurrentPage,
+  } = usePagination<RestaurantOrder>({ data: orderData, itemsPerPage: 10 });
+
   if (error) {
     return (
       <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
@@ -138,9 +148,15 @@ export function RestaurantOrdersTable({
       <div className="bg-white rounded-lg border border-gray-200">
         <Table
           columns={columns}
-          data={orderData}
+          data={paginatedData}
           loading={isLoading}
           emptyMessage="No restaurant orders found. Orders will appear here once guests place orders."
+          showPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={orderData.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
         />
       </div>
     </div>

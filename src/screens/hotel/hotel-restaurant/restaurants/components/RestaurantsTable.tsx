@@ -8,7 +8,7 @@ import {
   useRestaurants,
   useUpdateRestaurant,
 } from "../../../../../hooks/hotel-restaurant/restaurants/useRestaurants";
-import { useHotelId } from "../../../../../hooks/useHotelContext";
+import { useHotelId, usePagination } from "../../../../../hooks";
 import type { Database } from "../../../../../types/database";
 
 type RestaurantRow = Database["public"]["Tables"]["restaurants"]["Row"];
@@ -102,6 +102,15 @@ export function RestaurantsTable({ searchValue }: RestaurantsTableProps) {
       }));
   }, [restaurants, searchValue]);
 
+  // Pagination
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    itemsPerPage,
+    setCurrentPage,
+  } = usePagination<Restaurant>({ data: restaurantData, itemsPerPage: 10 });
+
   if (error) {
     return (
       <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
@@ -125,13 +134,19 @@ export function RestaurantsTable({ searchValue }: RestaurantsTableProps) {
       <div className="bg-white rounded-lg border border-gray-200">
         <Table
           columns={columns}
-          data={restaurantData}
+          data={paginatedData}
           loading={isLoading}
           emptyMessage={
             searchValue
               ? `No restaurants found matching "${searchValue}".`
               : "No restaurants found. Add new restaurants to get started."
           }
+          showPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={restaurantData.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
         />
       </div>
     </div>

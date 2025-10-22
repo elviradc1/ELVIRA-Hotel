@@ -2,6 +2,7 @@
 export * from "./useAuth";
 export * from "./useCurrentUserHotel";
 export * from "./useHotelContext";
+export * from "./usePagination";
 
 // API hooks with optimization
 export * from "./api";
