@@ -1,15 +1,18 @@
-import { Table, type TableColumn } from "../../../../../components/ui";
+import { useMemo } from "react";
+import { type TableColumn, DataTable } from "../../../../../components/ui";
+import { useCurrentHotelStaff } from "../../../../../hooks/hotel-staff";
 
+// Type for the transformed staff data
 interface StaffMember extends Record<string, unknown> {
   id: string;
   status: string;
   employeeId: string;
   position: string;
   department: string;
-  name: string;
-  phone: string;
-  email: string;
   hireDate: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string;
 }
 
 interface StaffTableProps {
@@ -17,65 +20,112 @@ interface StaffTableProps {
 }
 
 export function StaffTable({ searchValue }: StaffTableProps) {
-  // Define table columns with centered alignment
-  const columns: TableColumn<StaffMember>[] = [
-    {
-      key: "status",
-      label: "Status",
-      sortable: true,
-    },
-    {
-      key: "employeeId",
-      label: "Employee ID",
-      sortable: true,
-    },
-    {
-      key: "position",
-      label: "Position",
-      sortable: true,
-    },
-    {
-      key: "department",
-      label: "Department",
-      sortable: true,
-    },
-    {
-      key: "name",
-      label: "Name",
-      sortable: true,
-    },
-    {
-      key: "phone",
-      label: "Phone",
-    },
-    {
-      key: "email",
-      label: "Email",
-    },
-    {
-      key: "hireDate",
-      label: "Hire Date",
-      sortable: true,
-    },
-  ];
+  const { data: staffData, isLoading, error } = useCurrentHotelStaff();
 
-  // Empty data array - no mock data
-  const staffData: StaffMember[] = [];
+  // Define table columns
+  const columns: TableColumn<StaffMember>[] = useMemo(
+    () => [
+      {
+        key: "status",
+        label: "Status",
+        sortable: true,
+        render: (value) => (
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+              value === "active"
+                ? "bg-green-100 text-green-800"
+                : value === "inactive"
+                ? "bg-yellow-100 text-yellow-800"
+                : "bg-red-100 text-red-800"
+            }`}
+          >
+            {String(value).charAt(0).toUpperCase() + String(value).slice(1)}
+          </span>
+        ),
+      },
+      {
+        key: "employeeId",
+        label: "Employee ID",
+        sortable: true,
+      },
+      {
+        key: "fullName",
+        label: "Name",
+        sortable: true,
+      },
+      {
+        key: "position",
+        label: "Position",
+        sortable: true,
+      },
+      {
+        key: "department",
+        label: "Department",
+        sortable: true,
+      },
+      {
+        key: "email",
+        label: "Email",
+      },
+      {
+        key: "phoneNumber",
+        label: "Phone",
+      },
+      {
+        key: "hireDate",
+        label: "Hire Date",
+        sortable: true,
+      },
+    ],
+    []
+  );
+
+  // Transform raw data into table format
+  const transformData = useMemo(
+    () => (data: typeof staffData) => {
+      if (!data) return [];
+
+      return data.map((staff) => {
+        const personalData = staff.hotel_staff_personal_data;
+        const firstName = personalData?.first_name || "";
+        const lastName = personalData?.last_name || "";
+
+        return {
+          id: staff.id,
+          status: staff.status,
+          employeeId: staff.employee_id,
+          position: staff.position,
+          department: staff.department,
+          hireDate: new Date(staff.hire_date).toLocaleDateString(),
+          fullName: `${firstName} ${lastName}`.trim() || "N/A",
+          email: personalData?.email || "N/A",
+          phoneNumber: personalData?.phone_number || "N/A",
+        } as StaffMember;
+      });
+    },
+    []
+  );
 
   return (
-    <div className="mt-6">
-      {searchValue && (
-        <p className="text-sm text-gray-600 mb-4">
-          Searching for: "{searchValue}"
-        </p>
-      )}
-
-      {/* Staff Table */}
-      <Table
-        columns={columns}
-        data={staffData}
-        emptyMessage="No staff members found. Click '+ Add Member' to get started."
-      />
-    </div>
+    <DataTable
+      data={staffData}
+      isLoading={isLoading}
+      error={error}
+      columns={columns}
+      searchValue={searchValue}
+      searchFields={[
+        "fullName",
+        "employeeId",
+        "position",
+        "department",
+        "email",
+      ]}
+      transformData={transformData}
+      emptyMessage="No staff members found. Click '+ Add Member' to get started."
+      loadingMessage="Loading staff members..."
+      errorTitle="Failed to load staff members"
+      showSummary
+      summaryLabel="Total staff members"
+    />
   );
 }

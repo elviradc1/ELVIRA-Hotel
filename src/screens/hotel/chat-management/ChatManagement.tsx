@@ -1,9 +1,17 @@
 import { useState } from "react";
 import { TabsWithoutSearch, type TabItem } from "../../../components/ui";
 import { GuestCommunication, StaffCommunication } from "./components";
+import { useConversations } from "../../../hooks/useApi";
+import { useHotelId } from "../../../hooks/useHotelContext";
 
 export function ChatManagement() {
   const [activeTab, setActiveTab] = useState("guest-communication");
+
+  // Get the current user's hotel ID from context
+  const hotelId = useHotelId();
+
+  // Real-time conversations data with React Query
+  const { data: conversations } = useConversations(hotelId || undefined);
 
   const tabs: TabItem[] = [
     {
@@ -62,23 +70,40 @@ export function ChatManagement() {
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="px-6 py-4">
-          <div className="flex items-center">
-            <svg
-              className="w-6 h-6 text-gray-600 mr-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-              />
-            </svg>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Chat Management
-            </h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <svg
+                className="w-6 h-6 text-gray-600 mr-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Chat Management
+              </h1>
+            </div>
+
+            {/* Real-time status indicator */}
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="ml-2 text-sm text-gray-600">
+                  Real-time enabled
+                </span>
+              </div>
+              {conversations && (
+                <span className="bg-emerald-100 text-emerald-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                  {conversations.length} active conversations
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -1,11 +1,18 @@
 import { Button } from "../../../../components/ui";
 import { TasksTable } from "./components";
+import { useTasksRealtime } from "../../../../hooks/useRealtime";
+import { useHotelId } from "../../../../hooks/useHotelContext";
 
 interface TaskAssignmentProps {
   searchValue: string;
 }
 
 export function TaskAssignment({ searchValue }: TaskAssignmentProps) {
+  const hotelId = useHotelId();
+
+  // Enable real-time updates for tasks data
+  useTasksRealtime(hotelId || undefined);
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
