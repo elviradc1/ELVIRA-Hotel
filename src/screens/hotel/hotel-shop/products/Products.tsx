@@ -1,4 +1,5 @@
-import { ProductsTable } from "./components";
+import { useState } from "react";
+import { ProductsTable, AddProductModal } from "./components";
 import { Button } from "../../../../components/ui";
 
 interface ProductsProps {
@@ -6,6 +7,8 @@ interface ProductsProps {
 }
 
 export function Products({ searchValue }: ProductsProps) {
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
@@ -20,10 +23,7 @@ export function Products({ searchValue }: ProductsProps) {
         <Button
           variant="primary"
           size="md"
-          onClick={() => {
-            // TODO: Open add product modal
-            console.log("Add Product clicked");
-          }}
+          onClick={() => setIsAddModalOpen(true)}
         >
           <svg
             className="w-4 h-4 mr-2"
@@ -43,6 +43,11 @@ export function Products({ searchValue }: ProductsProps) {
       </div>
 
       <ProductsTable searchValue={searchValue} />
+
+      <AddProductModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+      />
     </div>
   );
 }

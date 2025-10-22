@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { TabsWithoutSearch, type TabItem } from "../../../components/ui";
+import { ProfileTab, ControlPanel } from "./components";
 
 export function Settings() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -56,25 +57,11 @@ export function Settings() {
       case "profile":
         return (
           <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Profile Settings
-            </h2>
-            <p className="text-gray-500">
-              Manage your profile information, account details, and preferences.
-            </p>
+            <ProfileTab />
           </div>
         );
       case "control-panel":
-        return (
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Control Panel
-            </h2>
-            <p className="text-gray-500">
-              Advanced system settings and administrative controls.
-            </p>
-          </div>
-        );
+        return <ControlPanel />;
       default:
         return null;
     }

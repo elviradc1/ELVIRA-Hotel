@@ -1,18 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Modal, Input, Button } from "../../../../../components/ui";
-import { useCreateQARecommendation } from "../../../../../hooks/qna/useQARecommendations";
+import {
+  useCreateQARecommendation,
+  useUpdateQARecommendation,
+} from "../../../../../hooks/qna/useQARecommendations";
 import { useHotelContext } from "../../../../../hooks/useHotelContext";
 import { useAuth } from "../../../../../hooks/useAuth";
+import type { Database } from "../../../../../types/database";
+
+type QARecommendation =
+  Database["public"]["Tables"]["qa_recommendations"]["Row"];
 
 interface AddQAModalProps {
   isOpen: boolean;
   onClose: () => void;
+  editData?: QARecommendation | null;
 }
 
-export function AddQAModal({ isOpen, onClose }: AddQAModalProps) {
+export function AddQAModal({
+  isOpen,
+  onClose,
+  editData = null,
+}: AddQAModalProps) {
   const { user } = useAuth();
   const { hotelId } = useHotelContext();
   const createQA = useCreateQARecommendation();
+  const updateQA = useUpdateQARecommendation();
 
   const [formData, setFormData] = useState({
     question: "",
@@ -20,6 +33,25 @@ export function AddQAModal({ isOpen, onClose }: AddQAModalProps) {
     category: "general",
     type: "qa",
   });
+
+  // Populate form when editing
+  useEffect(() => {
+    if (editData) {
+      setFormData({
+        question: editData.question || "",
+        answer: editData.answer || "",
+        category: editData.category,
+        type: editData.type,
+      });
+    } else {
+      setFormData({
+        question: "",
+        answer: "",
+        category: "general",
+        type: "qa",
+      });
+    }
+  }, [editData]);
 
   const [errors, setErrors] = useState({
     question: "",
@@ -86,15 +118,29 @@ export function AddQAModal({ isOpen, onClose }: AddQAModalProps) {
     }
 
     try {
-      await createQA.mutateAsync({
-        question: formData.question.trim(),
-        answer: formData.answer.trim(),
-        category: formData.category,
-        type: formData.type,
-        hotel_id: hotelId,
-        created_by: user.id,
-        is_active: true,
-      });
+      if (editData) {
+        // Update existing Q&A
+        await updateQA.mutateAsync({
+          id: editData.id,
+          updates: {
+            question: formData.question.trim(),
+            answer: formData.answer.trim(),
+            category: formData.category,
+            type: formData.type,
+          },
+        });
+      } else {
+        // Create new Q&A
+        await createQA.mutateAsync({
+          question: formData.question.trim(),
+          answer: formData.answer.trim(),
+          category: formData.category,
+          type: formData.type,
+          hotel_id: hotelId,
+          created_by: user.id,
+          is_active: true,
+        });
+      }
 
       // Reset form and close modal
       setFormData({
@@ -106,7 +152,7 @@ export function AddQAModal({ isOpen, onClose }: AddQAModalProps) {
       setErrors({ question: "", answer: "", category: "", type: "" });
       onClose();
     } catch (error) {
-      console.error("Error creating Q&A:", error);
+      console.error("Error saving Q&A:", error);
     }
   };
 
@@ -121,8 +167,16 @@ export function AddQAModal({ isOpen, onClose }: AddQAModalProps) {
     onClose();
   };
 
+  const isEditMode = !!editData;
+  const isPending = createQA.isPending || updateQA.isPending;
+
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Add Q&A" size="lg">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={isEditMode ? "Edit Q&A" : "Add Q&A"}
+      size="lg"
+    >
       <div className="space-y-4">
         {/* Type Select */}
         <div>
@@ -132,7 +186,7 @@ export function AddQAModal({ isOpen, onClose }: AddQAModalProps) {
           <select
             value={formData.type}
             onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-            disabled={createQA.isPending}
+            disabled={isPending}
             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors ${
               errors.type
                 ? "border-red-500"
@@ -160,7 +214,7 @@ export function AddQAModal({ isOpen, onClose }: AddQAModalProps) {
             onChange={(e) =>
               setFormData({ ...formData, category: e.target.value })
             }
-            disabled={createQA.isPending}
+            disabled={isPending}
             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors ${
               errors.category
                 ? "border-red-500"
@@ -187,7 +241,7 @@ export function AddQAModal({ isOpen, onClose }: AddQAModalProps) {
           }
           placeholder="Enter question"
           error={errors.question}
-          disabled={createQA.isPending}
+          disabled={isPending}
           leftIcon={
             <svg
               className="w-5 h-5 text-gray-400"
@@ -216,7 +270,7 @@ export function AddQAModal({ isOpen, onClose }: AddQAModalProps) {
               setFormData({ ...formData, answer: e.target.value })
             }
             placeholder="Enter answer or recommendation"
-            disabled={createQA.isPending}
+            disabled={isPending}
             rows={5}
             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors ${
               errors.answer
@@ -231,19 +285,11 @@ export function AddQAModal({ isOpen, onClose }: AddQAModalProps) {
 
         {/* Action Buttons */}
         <div className="flex justify-end gap-3 mt-6">
-          <Button
-            variant="outline"
-            onClick={handleClose}
-            disabled={createQA.isPending}
-          >
+          <Button variant="outline" onClick={handleClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button
-            variant="primary"
-            onClick={handleSubmit}
-            disabled={createQA.isPending}
-          >
-            {createQA.isPending ? (
+          <Button variant="primary" onClick={handleSubmit} disabled={isPending}>
+            {isPending ? (
               <>
                 <svg
                   className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
@@ -265,8 +311,10 @@ export function AddQAModal({ isOpen, onClose }: AddQAModalProps) {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Adding...
+                {isEditMode ? "Updating..." : "Adding..."}
               </>
+            ) : isEditMode ? (
+              "Update Q&A"
             ) : (
               "Add Q&A"
             )}

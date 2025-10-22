@@ -13,6 +13,7 @@ import {
 import { useHotelId } from "../../../../../hooks/useHotelContext";
 import { usePagination } from "../../../../../hooks";
 import { ProductDetailModal } from "./product-detail-modal";
+import { AddProductModal } from "./add-product-modal";
 import type { Database } from "../../../../../types/database";
 
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
@@ -303,6 +304,16 @@ export function ProductsTable({ searchValue }: ProductsTableProps) {
           setProductToDelete(null);
         }}
         loading={deleteProduct.isPending}
+      />
+
+      {/* Edit Product Modal */}
+      <AddProductModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setProductToEdit(null);
+        }}
+        product={productToEdit}
       />
     </div>
   );

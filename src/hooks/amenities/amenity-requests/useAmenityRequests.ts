@@ -19,6 +19,7 @@ export interface AmenityRequestWithDetails extends AmenityRequest {
     name: string;
     category: string;
     price: number;
+    image_url: string | null;
   } | null;
   guests: {
     id: string;
@@ -45,7 +46,8 @@ export function useAmenityRequests(hotelId: string | undefined) {
             id,
             name,
             category,
-            price
+            price,
+            image_url
           ),
           guests (
             id,

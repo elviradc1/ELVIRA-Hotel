@@ -1,21 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Modal, Input, Button, Textarea } from "../../../../../components/ui";
-import { useCreateRestaurant } from "../../../../../hooks/hotel-restaurant/restaurants/useRestaurants";
+import {
+  useCreateRestaurant,
+  useUpdateRestaurant,
+} from "../../../../../hooks/hotel-restaurant/restaurants/useRestaurants";
 import { useHotelContext } from "../../../../../hooks/useHotelContext";
 import { useAuth } from "../../../../../hooks/useAuth";
+import type { Database } from "../../../../../types/database";
+
+type Restaurant = Database["public"]["Tables"]["restaurants"]["Row"];
 
 interface AddRestaurantModalProps {
   isOpen: boolean;
   onClose: () => void;
+  editData?: Restaurant | null;
 }
 
 export function AddRestaurantModal({
   isOpen,
   onClose,
+  editData,
 }: AddRestaurantModalProps) {
   const { user } = useAuth();
   const { hotelId } = useHotelContext();
   const createRestaurant = useCreateRestaurant();
+  const updateRestaurant = useUpdateRestaurant();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -30,6 +39,27 @@ export function AddRestaurantModal({
     cuisine: "",
     description: "",
   });
+
+  // Populate form when editing
+  useEffect(() => {
+    if (editData) {
+      setFormData({
+        name: editData.name,
+        cuisine: editData.cuisine,
+        description: editData.description || "",
+        foodTypes: editData.food_types || [],
+        foodTypesInput: "",
+      });
+    } else {
+      setFormData({
+        name: "",
+        cuisine: "",
+        description: "",
+        foodTypes: [],
+        foodTypesInput: "",
+      });
+    }
+  }, [editData]);
 
   const validateForm = () => {
     const newErrors = {
@@ -84,15 +114,30 @@ export function AddRestaurantModal({
     }
 
     try {
-      await createRestaurant.mutateAsync({
-        name: formData.name.trim(),
-        cuisine: formData.cuisine.trim(),
-        description: formData.description.trim() || null,
-        food_types: formData.foodTypes.length > 0 ? formData.foodTypes : null,
-        hotel_id: hotelId,
-        created_by: user.id,
-        is_active: true,
-      });
+      if (editData) {
+        // Update existing restaurant
+        await updateRestaurant.mutateAsync({
+          id: editData.id,
+          updates: {
+            name: formData.name.trim(),
+            cuisine: formData.cuisine.trim(),
+            description: formData.description.trim() || null,
+            food_types:
+              formData.foodTypes.length > 0 ? formData.foodTypes : null,
+          },
+        });
+      } else {
+        // Create new restaurant
+        await createRestaurant.mutateAsync({
+          name: formData.name.trim(),
+          cuisine: formData.cuisine.trim(),
+          description: formData.description.trim() || null,
+          food_types: formData.foodTypes.length > 0 ? formData.foodTypes : null,
+          hotel_id: hotelId,
+          created_by: user.id,
+          is_active: true,
+        });
+      }
 
       // Reset form and close modal
       setFormData({
@@ -105,7 +150,10 @@ export function AddRestaurantModal({
       setErrors({ name: "", cuisine: "", description: "" });
       onClose();
     } catch (error) {
-      console.error("Error creating restaurant:", error);
+      console.error(
+        `Error ${editData ? "updating" : "creating"} restaurant:`,
+        error
+      );
     }
   };
 
@@ -121,11 +169,14 @@ export function AddRestaurantModal({
     onClose();
   };
 
+  const isEditMode = !!editData;
+  const isPending = createRestaurant.isPending || updateRestaurant.isPending;
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Add Restaurant"
+      title={isEditMode ? "Edit Restaurant" : "Add Restaurant"}
       size="lg"
     >
       <div className="space-y-4">
@@ -136,7 +187,7 @@ export function AddRestaurantModal({
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           placeholder="Enter restaurant name"
           error={errors.name}
-          disabled={createRestaurant.isPending}
+          disabled={isPending}
           leftIcon={
             <svg
               className="w-5 h-5 text-gray-400"
@@ -163,7 +214,7 @@ export function AddRestaurantModal({
           }
           placeholder="e.g., Italian, Chinese, Mexican"
           error={errors.cuisine}
-          disabled={createRestaurant.isPending}
+          disabled={isPending}
           leftIcon={
             <svg
               className="w-5 h-5 text-gray-400"
@@ -193,7 +244,7 @@ export function AddRestaurantModal({
             }
             placeholder="Enter restaurant description"
             error={errors.description}
-            disabled={createRestaurant.isPending}
+            disabled={isPending}
             rows={3}
           />
         </div>
@@ -212,15 +263,13 @@ export function AddRestaurantModal({
               }
               onKeyPress={handleKeyPress}
               placeholder="e.g., Pasta, Pizza, Sushi"
-              disabled={createRestaurant.isPending}
+              disabled={isPending}
               className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 hover:border-gray-400 transition-colors"
             />
             <Button
               variant="outline"
               onClick={handleAddFoodType}
-              disabled={
-                createRestaurant.isPending || !formData.foodTypesInput.trim()
-              }
+              disabled={isPending || !formData.foodTypesInput.trim()}
             >
               Add
             </Button>
@@ -236,7 +285,7 @@ export function AddRestaurantModal({
                   <button
                     type="button"
                     onClick={() => handleRemoveFoodType(foodType)}
-                    disabled={createRestaurant.isPending}
+                    disabled={isPending}
                     className="hover:text-emerald-900 focus:outline-none"
                   >
                     <svg
@@ -264,19 +313,11 @@ export function AddRestaurantModal({
 
         {/* Action Buttons */}
         <div className="flex justify-end gap-3 mt-6">
-          <Button
-            variant="outline"
-            onClick={handleClose}
-            disabled={createRestaurant.isPending}
-          >
+          <Button variant="outline" onClick={handleClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button
-            variant="primary"
-            onClick={handleSubmit}
-            disabled={createRestaurant.isPending}
-          >
-            {createRestaurant.isPending ? (
+          <Button variant="primary" onClick={handleSubmit} disabled={isPending}>
+            {isPending ? (
               <>
                 <svg
                   className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
@@ -298,8 +339,10 @@ export function AddRestaurantModal({
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Adding...
+                {isEditMode ? "Updating..." : "Adding..."}
               </>
+            ) : isEditMode ? (
+              "Update Restaurant"
             ) : (
               "Add Restaurant"
             )}

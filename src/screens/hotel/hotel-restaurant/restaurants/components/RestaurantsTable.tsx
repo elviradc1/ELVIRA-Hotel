@@ -1,15 +1,18 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Table,
   type TableColumn,
   StatusBadge,
+  ConfirmationModal,
 } from "../../../../../components/ui";
 import {
   useRestaurants,
   useUpdateRestaurant,
+  useDeleteRestaurant,
 } from "../../../../../hooks/hotel-restaurant/restaurants/useRestaurants";
 import { useHotelId, usePagination } from "../../../../../hooks";
 import type { Database } from "../../../../../types/database";
+import { RestaurantDetailModal } from "./RestaurantDetailModal";
 
 type RestaurantRow = Database["public"]["Tables"]["restaurants"]["Row"];
 
@@ -24,9 +27,13 @@ interface Restaurant extends Record<string, unknown> {
 
 interface RestaurantsTableProps {
   searchValue: string;
+  onEdit?: (restaurant: RestaurantRow) => void;
 }
 
-export function RestaurantsTable({ searchValue }: RestaurantsTableProps) {
+export function RestaurantsTable({
+  searchValue,
+  onEdit,
+}: RestaurantsTableProps) {
   const hotelId = useHotelId();
 
   // Fetch restaurants using the hook
@@ -36,8 +43,56 @@ export function RestaurantsTable({ searchValue }: RestaurantsTableProps) {
     error,
   } = useRestaurants(hotelId || undefined);
 
-  // Get the update mutation
+  // Get the update and delete mutations
   const updateRestaurant = useUpdateRestaurant();
+  const deleteRestaurant = useDeleteRestaurant();
+
+  // State for detail modal and delete confirmation
+  const [selectedRestaurant, setSelectedRestaurant] =
+    useState<RestaurantRow | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [restaurantToDelete, setRestaurantToDelete] =
+    useState<RestaurantRow | null>(null);
+
+  // Handlers
+  const handleRowClick = (restaurant: Restaurant) => {
+    const originalRestaurant = restaurants?.find(
+      (r: RestaurantRow) => r.id === restaurant.id
+    );
+    if (originalRestaurant) {
+      setSelectedRestaurant(originalRestaurant);
+      setIsDetailModalOpen(true);
+    }
+  };
+
+  const handleEdit = () => {
+    if (selectedRestaurant && onEdit) {
+      onEdit(selectedRestaurant);
+      setIsDetailModalOpen(false);
+    }
+  };
+
+  const handleDelete = () => {
+    setRestaurantToDelete(selectedRestaurant);
+    setIsDetailModalOpen(false);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!restaurantToDelete || !hotelId) return;
+
+    try {
+      await deleteRestaurant.mutateAsync({
+        id: restaurantToDelete.id,
+        hotelId,
+      });
+      setIsDeleteConfirmOpen(false);
+      setRestaurantToDelete(null);
+    } catch (error) {
+      console.error("Error deleting restaurant:", error);
+    }
+  };
 
   // Define table columns for restaurants
   const columns: TableColumn<Restaurant>[] = [
@@ -147,8 +202,29 @@ export function RestaurantsTable({ searchValue }: RestaurantsTableProps) {
           totalItems={restaurantData.length}
           itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
+          onRowClick={handleRowClick}
         />
       </div>
+
+      {/* Restaurant Detail Modal */}
+      <RestaurantDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        restaurant={selectedRestaurant}
+        onEdit={onEdit ? handleEdit : undefined}
+        onDelete={handleDelete}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Restaurant"
+        message={`Are you sure you want to delete "${restaurantToDelete?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        variant="danger"
+      />
     </div>
   );
 }

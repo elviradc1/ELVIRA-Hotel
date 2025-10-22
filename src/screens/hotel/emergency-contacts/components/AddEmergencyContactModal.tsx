@@ -1,26 +1,51 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Modal, Input, Button } from "../../../../components/ui";
-import { useCreateEmergencyContact } from "../../../../hooks/emergency-contacts/useEmergencyContacts";
+import {
+  useCreateEmergencyContact,
+  useUpdateEmergencyContact,
+} from "../../../../hooks/emergency-contacts/useEmergencyContacts";
 import { useHotelId } from "../../../../hooks/useHotelContext";
 import { useAuth } from "../../../../hooks/useAuth";
+import type { Database } from "../../../../types/database";
+
+type EmergencyContact =
+  Database["public"]["Tables"]["emergency_contacts"]["Row"];
 
 interface AddEmergencyContactModalProps {
   isOpen: boolean;
   onClose: () => void;
+  editData?: EmergencyContact | null;
 }
 
 export function AddEmergencyContactModal({
   isOpen,
   onClose,
+  editData = null,
 }: AddEmergencyContactModalProps) {
   const hotelId = useHotelId();
   const { user } = useAuth();
   const createEmergencyContact = useCreateEmergencyContact();
+  const updateEmergencyContact = useUpdateEmergencyContact();
 
   const [formData, setFormData] = useState({
     contactName: "",
     phoneNumber: "",
   });
+
+  // Populate form when editing
+  useEffect(() => {
+    if (editData) {
+      setFormData({
+        contactName: editData.contact_name,
+        phoneNumber: editData.phone_number,
+      });
+    } else {
+      setFormData({
+        contactName: "",
+        phoneNumber: "",
+      });
+    }
+  }, [editData]);
 
   const [errors, setErrors] = useState({
     contactName: "",
@@ -67,13 +92,25 @@ export function AddEmergencyContactModal({
     }
 
     try {
-      await createEmergencyContact.mutateAsync({
-        contact_name: formData.contactName.trim(),
-        phone_number: formData.phoneNumber.trim(),
-        hotel_id: hotelId,
-        created_by: user?.id || null,
-        is_active: true,
-      });
+      if (editData) {
+        // Update existing contact
+        await updateEmergencyContact.mutateAsync({
+          id: editData.id,
+          updates: {
+            contact_name: formData.contactName.trim(),
+            phone_number: formData.phoneNumber.trim(),
+          },
+        });
+      } else {
+        // Create new contact
+        await createEmergencyContact.mutateAsync({
+          contact_name: formData.contactName.trim(),
+          phone_number: formData.phoneNumber.trim(),
+          hotel_id: hotelId,
+          created_by: user?.id || null,
+          is_active: true,
+        });
+      }
 
       // Reset form and close modal
       setFormData({
@@ -86,7 +123,7 @@ export function AddEmergencyContactModal({
       });
       onClose();
     } catch (error) {
-      console.error("Error creating emergency contact:", error);
+      console.error("Error saving emergency contact:", error);
     }
   };
 
@@ -103,8 +140,16 @@ export function AddEmergencyContactModal({
     onClose();
   };
 
+  const isEditMode = !!editData;
+  const isPending =
+    createEmergencyContact.isPending || updateEmergencyContact.isPending;
+
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Add Emergency Contact">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={isEditMode ? "Edit Emergency Contact" : "Add Emergency Contact"}
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Contact Name Input */}
         <Input
@@ -168,16 +213,12 @@ export function AddEmergencyContactModal({
             type="button"
             variant="outline"
             onClick={handleClose}
-            disabled={createEmergencyContact.isPending}
+            disabled={isPending}
           >
             Cancel
           </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={createEmergencyContact.isPending}
-          >
-            {createEmergencyContact.isPending ? (
+          <Button type="submit" variant="primary" disabled={isPending}>
+            {isPending ? (
               <>
                 <svg
                   className="animate-spin -ml-1 mr-2 h-4 w-4"
@@ -196,11 +237,13 @@ export function AddEmergencyContactModal({
                   <path
                     className="opacity-75"
                     fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 74 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Adding...
+                {isEditMode ? "Updating..." : "Adding..."}
               </>
+            ) : isEditMode ? (
+              "Update Contact"
             ) : (
               "Add Contact"
             )}

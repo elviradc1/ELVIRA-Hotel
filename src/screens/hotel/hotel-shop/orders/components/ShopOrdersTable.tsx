@@ -1,11 +1,17 @@
-import { useMemo } from "react";
-import { Table, type TableColumn } from "../../../../../components/ui";
+import { useMemo, useState } from "react";
+import {
+  Table,
+  type TableColumn,
+  ConfirmationModal,
+} from "../../../../../components/ui";
 import {
   useShopOrders,
+  useDeleteShopOrder,
   type ShopOrderWithDetails,
 } from "../../../../../hooks/hotel-shop/shop-orders/useShopOrders";
 import { useHotelId } from "../../../../../hooks/useHotelContext";
 import { usePagination } from "../../../../../hooks";
+import { ShopOrderDetailModal } from "../../shop-orders/components/shop-order-detail-modal";
 
 interface ShopOrder extends Record<string, unknown> {
   id: string;
@@ -23,6 +29,12 @@ interface ShopOrdersTableProps {
 
 export function ShopOrdersTable({ searchValue }: ShopOrdersTableProps) {
   const hotelId = useHotelId();
+  const [selectedOrder, setSelectedOrder] =
+    useState<ShopOrderWithDetails | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] =
+    useState<ShopOrderWithDetails | null>(null);
 
   // Fetch shop orders using the hook
   const {
@@ -30,6 +42,48 @@ export function ShopOrdersTable({ searchValue }: ShopOrdersTableProps) {
     isLoading,
     error,
   } = useShopOrders(hotelId || undefined);
+
+  // Get delete mutation
+  const deleteOrder = useDeleteShopOrder();
+
+  // Handle row click to open details modal
+  const handleRowClick = (row: ShopOrder) => {
+    const fullOrder = shopOrders?.find((order) => order.id === row.id);
+    if (fullOrder) {
+      setSelectedOrder(fullOrder);
+      setIsDetailModalOpen(true);
+    }
+  };
+
+  // Close detail modal
+  const handleCloseModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedOrder(null);
+  };
+
+  // Delete handler: open confirmation modal
+  const handleDelete = () => {
+    if (selectedOrder) {
+      setOrderToDelete(selectedOrder);
+      setIsDeleteConfirmOpen(true);
+      setIsDetailModalOpen(false);
+    }
+  };
+
+  // Confirm delete action
+  const confirmDelete = () => {
+    if (orderToDelete && hotelId) {
+      deleteOrder.mutate(
+        { id: orderToDelete.id, hotelId },
+        {
+          onSuccess: () => {
+            setIsDeleteConfirmOpen(false);
+            setOrderToDelete(null);
+          },
+        }
+      );
+    }
+  };
 
   // Define table columns for shop orders
   const columns: TableColumn<ShopOrder>[] = [
@@ -133,6 +187,7 @@ export function ShopOrdersTable({ searchValue }: ShopOrdersTableProps) {
           data={paginatedData}
           loading={isLoading}
           emptyMessage="No shop orders found. Orders will appear here once guests start purchasing items."
+          onRowClick={handleRowClick}
           showPagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -141,6 +196,29 @@ export function ShopOrdersTable({ searchValue }: ShopOrdersTableProps) {
           onPageChange={setCurrentPage}
         />
       </div>
+
+      {/* Order Detail Modal */}
+      <ShopOrderDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseModal}
+        order={selectedOrder}
+        onDelete={handleDelete}
+      />
+
+      {/* Confirmation Modal for Delete */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        title="Delete Order"
+        message="Are you sure you want to delete this order? This action cannot be undone."
+        confirmText="Delete"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onClose={() => {
+          setIsDeleteConfirmOpen(false);
+          setOrderToDelete(null);
+        }}
+        loading={deleteOrder.isPending}
+      />
     </div>
   );
 }

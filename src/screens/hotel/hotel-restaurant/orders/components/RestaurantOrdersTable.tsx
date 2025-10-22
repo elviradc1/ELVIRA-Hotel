@@ -1,11 +1,17 @@
-import { useMemo } from "react";
-import { Table, type TableColumn } from "../../../../../components/ui";
+import { useMemo, useState } from "react";
+import {
+  Table,
+  type TableColumn,
+  ConfirmationModal,
+} from "../../../../../components/ui";
 import {
   useDineInOrders,
+  useDeleteDineInOrder,
   type DineInOrderWithDetails,
 } from "../../../../../hooks/hotel-restaurant/dine-in-orders/useDineInOrders";
 import { useHotelId } from "../../../../../hooks/useHotelContext";
 import { usePagination } from "../../../../../hooks";
+import { DineInOrderDetailModal } from "./dine-in-order-detail-modal";
 
 interface RestaurantOrder extends Record<string, unknown> {
   id: string;
@@ -26,6 +32,12 @@ export function RestaurantOrdersTable({
   searchValue,
 }: RestaurantOrdersTableProps) {
   const hotelId = useHotelId();
+  const [selectedOrder, setSelectedOrder] =
+    useState<DineInOrderWithDetails | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] =
+    useState<DineInOrderWithDetails | null>(null);
 
   // Fetch dine-in orders using the hook
   const {
@@ -33,6 +45,48 @@ export function RestaurantOrdersTable({
     isLoading,
     error,
   } = useDineInOrders(hotelId || undefined);
+
+  // Get delete mutation
+  const deleteOrder = useDeleteDineInOrder();
+
+  // Handle row click to open details modal
+  const handleRowClick = (row: RestaurantOrder) => {
+    const fullOrder = dineInOrders?.find((order) => order.id === row.id);
+    if (fullOrder) {
+      setSelectedOrder(fullOrder);
+      setIsDetailModalOpen(true);
+    }
+  };
+
+  // Close detail modal
+  const handleCloseModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedOrder(null);
+  };
+
+  // Delete handler: open confirmation modal
+  const handleDelete = () => {
+    if (selectedOrder) {
+      setOrderToDelete(selectedOrder);
+      setIsDeleteConfirmOpen(true);
+      setIsDetailModalOpen(false);
+    }
+  };
+
+  // Confirm delete action
+  const confirmDelete = () => {
+    if (orderToDelete && hotelId) {
+      deleteOrder.mutate(
+        { id: orderToDelete.id, hotelId },
+        {
+          onSuccess: () => {
+            setIsDeleteConfirmOpen(false);
+            setOrderToDelete(null);
+          },
+        }
+      );
+    }
+  };
 
   // Define table columns for restaurant orders
   const columns: TableColumn<RestaurantOrder>[] = [
@@ -151,6 +205,7 @@ export function RestaurantOrdersTable({
           data={paginatedData}
           loading={isLoading}
           emptyMessage="No restaurant orders found. Orders will appear here once guests place orders."
+          onRowClick={handleRowClick}
           showPagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -159,6 +214,29 @@ export function RestaurantOrdersTable({
           onPageChange={setCurrentPage}
         />
       </div>
+
+      {/* Order Detail Modal */}
+      <DineInOrderDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseModal}
+        order={selectedOrder}
+        onDelete={handleDelete}
+      />
+
+      {/* Confirmation Modal for Delete */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        title="Delete Order"
+        message="Are you sure you want to delete this order? This action cannot be undone."
+        confirmText="Delete"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onClose={() => {
+          setIsDeleteConfirmOpen(false);
+          setOrderToDelete(null);
+        }}
+        loading={deleteOrder.isPending}
+      />
     </div>
   );
 }

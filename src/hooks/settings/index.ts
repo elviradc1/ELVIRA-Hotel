@@ -5,5 +5,6 @@ export {
   useUpsertHotelSetting,
   useUpdateHotelSetting,
   useToggleHotelSetting,
+  useToggleHotelSettingByKey,
   useDeleteHotelSetting,
 } from "./useHotelSettings";

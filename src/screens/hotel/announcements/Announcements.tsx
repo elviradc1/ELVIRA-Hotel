@@ -1,13 +1,29 @@
 import { useState } from "react";
 import { SearchBox, Button } from "../../../components/ui";
 import { AnnouncementsTable, AddAnnouncementModal } from "./components";
+import type { Database } from "../../../types/database";
+
+type Announcement = Database["public"]["Tables"]["announcements"]["Row"];
 
 export function Announcements() {
   const [searchValue, setSearchValue] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editAnnouncement, setEditAnnouncement] = useState<Announcement | null>(
+    null
+  );
 
   const handleSearchClear = () => {
     setSearchValue("");
+  };
+
+  const handleEdit = (announcement: Announcement) => {
+    setEditAnnouncement(announcement);
+    setIsAddModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsAddModalOpen(false);
+    setEditAnnouncement(null);
   };
 
   return (
@@ -70,13 +86,14 @@ export function Announcements() {
           </div>
         </div>
 
-        <AnnouncementsTable searchValue={searchValue} />
+        <AnnouncementsTable searchValue={searchValue} onEdit={handleEdit} />
       </div>
 
-      {/* Add Announcement Modal */}
+      {/* Add/Edit Announcement Modal */}
       <AddAnnouncementModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={handleCloseModal}
+        editData={editAnnouncement}
       />
     </div>
   );

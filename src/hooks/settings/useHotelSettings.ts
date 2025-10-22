@@ -209,6 +209,51 @@ export function useToggleHotelSetting() {
 }
 
 /**
+ * Toggle setting value by key (creates if doesn't exist)
+ */
+export function useToggleHotelSettingByKey() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      hotelId,
+      settingKey,
+      settingValue,
+      createdBy,
+    }: {
+      hotelId: string;
+      settingKey: string;
+      settingValue: boolean;
+      createdBy?: string;
+    }) => {
+      const { data, error } = await supabase
+        .from("hotel_settings")
+        .upsert(
+          {
+            hotel_id: hotelId,
+            setting_key: settingKey,
+            setting_value: settingValue,
+            created_by: createdBy,
+          },
+          {
+            onConflict: "hotel_id,setting_key",
+          }
+        )
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data: HotelSetting) => {
+      queryClient.invalidateQueries({
+        queryKey: [HOTEL_SETTINGS_QUERY_KEY, data.hotel_id],
+      });
+    },
+  });
+}
+
+/**
  * Delete a hotel setting
  */
 export function useDeleteHotelSetting() {

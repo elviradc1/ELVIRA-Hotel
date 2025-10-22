@@ -1,13 +1,28 @@
 import { useState } from "react";
 import { SearchBox, Button } from "../../../components/ui";
 import { EmergencyContactsTable, AddEmergencyContactModal } from "./components";
+import type { Database } from "../../../types/database";
+
+type EmergencyContact =
+  Database["public"]["Tables"]["emergency_contacts"]["Row"];
 
 export function EmergencyContacts() {
   const [searchValue, setSearchValue] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editContact, setEditContact] = useState<EmergencyContact | null>(null);
 
   const handleSearchClear = () => {
     setSearchValue("");
+  };
+
+  const handleEdit = (contact: EmergencyContact) => {
+    setEditContact(contact);
+    setIsAddModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsAddModalOpen(false);
+    setEditContact(null);
   };
 
   return (
@@ -71,13 +86,14 @@ export function EmergencyContacts() {
           </div>
         </div>
 
-        <EmergencyContactsTable searchValue={searchValue} />
+        <EmergencyContactsTable searchValue={searchValue} onEdit={handleEdit} />
       </div>
 
-      {/* Add Emergency Contact Modal */}
+      {/* Add/Edit Emergency Contact Modal */}
       <AddEmergencyContactModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={handleCloseModal}
+        editData={editContact}
       />
     </div>
   );

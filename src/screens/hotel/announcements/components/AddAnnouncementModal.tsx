@@ -1,26 +1,47 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Modal, Input, Button } from "../../../../components/ui";
-import { useCreateAnnouncement } from "../../../../hooks/announcements/useAnnouncements";
+import {
+  useCreateAnnouncement,
+  useUpdateAnnouncement,
+} from "../../../../hooks/announcements/useAnnouncements";
 import { useHotelContext } from "../../../../hooks/useHotelContext";
 import { useAuth } from "../../../../hooks/useAuth";
+import type { Database } from "../../../../types/database";
+
+type Announcement = Database["public"]["Tables"]["announcements"]["Row"];
 
 interface AddAnnouncementModalProps {
   isOpen: boolean;
   onClose: () => void;
+  editData?: Announcement | null;
 }
 
 export function AddAnnouncementModal({
   isOpen,
   onClose,
+  editData = null,
 }: AddAnnouncementModalProps) {
   const { user } = useAuth();
   const { hotelId } = useHotelContext();
   const createAnnouncement = useCreateAnnouncement();
+  const updateAnnouncement = useUpdateAnnouncement();
 
   const [formData, setFormData] = useState({
     title: "",
     description: "",
   });
+
+  // Populate form when editing
+  useEffect(() => {
+    if (editData) {
+      setFormData({
+        title: editData.title,
+        description: editData.description,
+      });
+    } else {
+      setFormData({ title: "", description: "" });
+    }
+  }, [editData]);
 
   const [errors, setErrors] = useState({
     title: "",
@@ -54,20 +75,32 @@ export function AddAnnouncementModal({
     }
 
     try {
-      await createAnnouncement.mutateAsync({
-        title: formData.title.trim(),
-        description: formData.description.trim(),
-        hotel_id: hotelId,
-        created_by: user.id,
-        is_active: true,
-      });
+      if (editData) {
+        // Update existing announcement
+        await updateAnnouncement.mutateAsync({
+          id: editData.id,
+          updates: {
+            title: formData.title.trim(),
+            description: formData.description.trim(),
+          },
+        });
+      } else {
+        // Create new announcement
+        await createAnnouncement.mutateAsync({
+          title: formData.title.trim(),
+          description: formData.description.trim(),
+          hotel_id: hotelId,
+          created_by: user.id,
+          is_active: true,
+        });
+      }
 
       // Reset form and close modal
       setFormData({ title: "", description: "" });
       setErrors({ title: "", description: "" });
       onClose();
     } catch (error) {
-      console.error("Error creating announcement:", error);
+      console.error("Error saving announcement:", error);
     }
   };
 
@@ -77,8 +110,16 @@ export function AddAnnouncementModal({
     onClose();
   };
 
+  const isEditMode = !!editData;
+  const isPending =
+    createAnnouncement.isPending || updateAnnouncement.isPending;
+
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Add Announcement">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={isEditMode ? "Edit Announcement" : "Add Announcement"}
+    >
       <div className="space-y-4">
         {/* Title Input */}
         <Input
@@ -87,7 +128,7 @@ export function AddAnnouncementModal({
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           placeholder="Enter announcement title"
           error={errors.title}
-          disabled={createAnnouncement.isPending}
+          disabled={isPending}
           leftIcon={
             <svg
               className="w-5 h-5 text-gray-400"
@@ -116,13 +157,13 @@ export function AddAnnouncementModal({
               setFormData({ ...formData, description: e.target.value })
             }
             placeholder="Enter announcement description"
-            disabled={createAnnouncement.isPending}
+            disabled={isPending}
             rows={4}
             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors ${
               errors.description
                 ? "border-red-500"
                 : "border-gray-300 hover:border-gray-400"
-            } ${createAnnouncement.isPending ? "bg-gray-50" : ""}`}
+            } ${isPending ? "bg-gray-50" : ""}`}
           />
           {errors.description && (
             <p className="mt-1 text-sm text-red-600">{errors.description}</p>
@@ -131,19 +172,11 @@ export function AddAnnouncementModal({
 
         {/* Action Buttons */}
         <div className="flex justify-end gap-3 mt-6">
-          <Button
-            variant="outline"
-            onClick={handleClose}
-            disabled={createAnnouncement.isPending}
-          >
+          <Button variant="outline" onClick={handleClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button
-            variant="primary"
-            onClick={handleSubmit}
-            disabled={createAnnouncement.isPending}
-          >
-            {createAnnouncement.isPending ? (
+          <Button variant="primary" onClick={handleSubmit} disabled={isPending}>
+            {isPending ? (
               <>
                 <svg
                   className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
@@ -165,8 +198,10 @@ export function AddAnnouncementModal({
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Adding...
+                {isEditMode ? "Updating..." : "Adding..."}
               </>
+            ) : isEditMode ? (
+              "Update Announcement"
             ) : (
               "Add Announcement"
             )}

@@ -24,6 +24,7 @@ export interface ShopOrderWithDetails extends ShopOrder {
         id: string;
         name: string;
         category: string;
+        image_url: string | null;
       } | null;
     }
   >;
@@ -53,7 +54,8 @@ export function useShopOrders(hotelId: string | undefined) {
             products (
               id,
               name,
-              category
+              category,
+              image_url
             )
           )
         `
@@ -147,7 +149,8 @@ export function useShopOrdersByStatus(
             products (
               id,
               name,
-              category
+              category,
+              image_url
             )
           )
         `

@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { QnATable, AddQAModal } from "./components";
 import { Button } from "../../../../components/ui";
+import type { Database } from "../../../../types/database";
+
+type QARecommendation =
+  Database["public"]["Tables"]["qa_recommendations"]["Row"];
 
 interface QnAManagementProps {
   searchValue: string;
@@ -8,6 +12,18 @@ interface QnAManagementProps {
 
 export function QnAManagement({ searchValue }: QnAManagementProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editQA, setEditQA] = useState<QARecommendation | null>(null);
+
+  const handleEdit = (qaItem: QARecommendation) => {
+    setEditQA(qaItem);
+    setIsAddModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsAddModalOpen(false);
+    setEditQA(null);
+  };
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
@@ -41,12 +57,13 @@ export function QnAManagement({ searchValue }: QnAManagementProps) {
         </Button>
       </div>
 
-      <QnATable searchValue={searchValue} />
+      <QnATable searchValue={searchValue} onEdit={handleEdit} />
 
-      {/* Add Q&A Modal */}
+      {/* Add/Edit Q&A Modal */}
       <AddQAModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={handleCloseModal}
+        editData={editQA}
       />
     </div>
   );

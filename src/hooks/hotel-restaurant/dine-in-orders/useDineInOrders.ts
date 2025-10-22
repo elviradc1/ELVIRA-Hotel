@@ -27,6 +27,7 @@ export interface DineInOrderWithDetails extends DineInOrder {
         id: string;
         name: string;
         category: string;
+        image_url: string | null;
       } | null;
     }
   >;
@@ -60,7 +61,8 @@ export function useDineInOrders(hotelId: string | undefined) {
             menu_items (
               id,
               name,
-              category
+              category,
+              image_url
             )
           ),
           restaurants (
@@ -158,7 +160,8 @@ export function useDineInOrdersByStatus(
             menu_items (
               id,
               name,
-              category
+              category,
+              image_url
             )
           ),
           restaurants (

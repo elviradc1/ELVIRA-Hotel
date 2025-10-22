@@ -1,14 +1,21 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Table,
   type TableColumn,
   StatusBadge,
+  ConfirmationModal,
 } from "../../../../../components/ui";
 import {
   useQARecommendations,
   useUpdateQARecommendation,
+  useDeleteQARecommendation,
 } from "../../../../../hooks/qna/useQARecommendations";
 import { useHotelContext, usePagination } from "../../../../../hooks";
+import { QADetailModal } from "./QADetailModal";
+import type { Database } from "../../../../../types/database";
+
+type QARecommendationRow =
+  Database["public"]["Tables"]["qa_recommendations"]["Row"];
 
 interface QnATableData extends Record<string, unknown> {
   id: string;
@@ -23,11 +30,22 @@ interface QnATableData extends Record<string, unknown> {
 
 interface QnATableProps {
   searchValue: string;
+  onEdit: (qaItem: QARecommendationRow) => void;
 }
 
-export function QnATable({ searchValue }: QnATableProps) {
+export function QnATable({ searchValue, onEdit }: QnATableProps) {
   // Get hotel ID from context
   const { hotelId } = useHotelContext();
+
+  // State for detail modal
+  const [selectedQA, setSelectedQA] = useState<QARecommendationRow | null>(
+    null
+  );
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [qaToDelete, setQAToDelete] = useState<QARecommendationRow | null>(
+    null
+  );
 
   // Fetch Q&A recommendations data
   const {
@@ -36,8 +54,56 @@ export function QnATable({ searchValue }: QnATableProps) {
     error,
   } = useQARecommendations(hotelId || undefined);
 
-  // Get the update mutation
+  // Get the mutations
   const updateQARecommendation = useUpdateQARecommendation();
+  const deleteQARecommendation = useDeleteQARecommendation();
+
+  // Handler for row click
+  const handleRowClick = (row: QnATableData) => {
+    const qaItem = qnaItems.find((q) => q.id === row.id);
+    if (qaItem) {
+      setSelectedQA(qaItem);
+      setIsDetailModalOpen(true);
+    }
+  };
+
+  // Handler for closing modal
+  const handleCloseModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedQA(null);
+  };
+
+  // Handler for edit
+  const handleEdit = () => {
+    if (selectedQA) {
+      onEdit(selectedQA);
+    }
+  };
+
+  // Handler for delete
+  const handleDelete = () => {
+    if (selectedQA) {
+      setQAToDelete(selectedQA);
+      setIsDeleteConfirmOpen(true);
+    }
+  };
+
+  // Confirm delete
+  const confirmDelete = async () => {
+    if (!qaToDelete || !hotelId) return;
+    try {
+      await deleteQARecommendation.mutateAsync({
+        id: qaToDelete.id,
+        hotelId,
+      });
+      setIsDeleteConfirmOpen(false);
+      setQAToDelete(null);
+      setIsDetailModalOpen(false);
+      setSelectedQA(null);
+    } catch (error) {
+      console.error("Error deleting Q&A:", error);
+    }
+  };
 
   // Transform and filter Q&A data
   const qnaData = useMemo(() => {
@@ -152,8 +218,29 @@ export function QnATable({ searchValue }: QnATableProps) {
           totalItems={qnaData.length}
           itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
+          onRowClick={handleRowClick}
         />
       </div>
+
+      {/* Detail Modal */}
+      <QADetailModal
+        qaItem={selectedQA}
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseModal}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Q&A"
+        message="Are you sure you want to delete this Q&A item? This action cannot be undone."
+        confirmText="Delete"
+        variant="danger"
+      />
     </div>
   );
 }

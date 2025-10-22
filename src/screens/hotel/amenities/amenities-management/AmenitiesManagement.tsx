@@ -1,4 +1,5 @@
-import { AmenitiesTable } from "./components";
+import { useState } from "react";
+import { AmenitiesTable, AddAmenityModal } from "./components";
 import { Button } from "../../../../components/ui";
 
 interface AmenitiesManagementProps {
@@ -6,6 +7,8 @@ interface AmenitiesManagementProps {
 }
 
 export function AmenitiesManagement({ searchValue }: AmenitiesManagementProps) {
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
@@ -21,10 +24,7 @@ export function AmenitiesManagement({ searchValue }: AmenitiesManagementProps) {
         <Button
           variant="primary"
           size="md"
-          onClick={() => {
-            // TODO: Open add amenity modal
-            console.log("Add Amenity clicked");
-          }}
+          onClick={() => setIsAddModalOpen(true)}
         >
           <svg
             className="w-4 h-4 mr-2"
@@ -44,6 +44,11 @@ export function AmenitiesManagement({ searchValue }: AmenitiesManagementProps) {
       </div>
 
       <AmenitiesTable searchValue={searchValue} />
+
+      <AddAmenityModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+      />
     </div>
   );
 }

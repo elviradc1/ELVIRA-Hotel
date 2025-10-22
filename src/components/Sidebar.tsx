@@ -33,9 +33,9 @@ export function Sidebar({
     <aside
       className={`${
         isCollapsed ? "w-20" : "w-64"
-      } bg-emerald-500 shrink-0 flex flex-col transition-all duration-300`}
+      } bg-emerald-500 shrink-0 flex flex-col transition-all duration-300 h-screen sticky top-0`}
     >
-      <div className="p-4 flex-1">
+      <div className="p-4 flex-1 overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           {!isCollapsed && (

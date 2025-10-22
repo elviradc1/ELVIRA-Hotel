@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { RestaurantsTable, AddRestaurantModal } from "./components";
 import { Button } from "../../../../components/ui";
+import type { Database } from "../../../../types/database";
+
+type Restaurant = Database["public"]["Tables"]["restaurants"]["Row"];
 
 interface RestaurantsProps {
   searchValue: string;
@@ -8,6 +11,18 @@ interface RestaurantsProps {
 
 export function Restaurants({ searchValue }: RestaurantsProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editRestaurant, setEditRestaurant] = useState<Restaurant | null>(null);
+
+  const handleEdit = (restaurant: Restaurant) => {
+    setEditRestaurant(restaurant);
+    setIsAddModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsAddModalOpen(false);
+    setEditRestaurant(null);
+  };
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
@@ -41,12 +56,13 @@ export function Restaurants({ searchValue }: RestaurantsProps) {
         </Button>
       </div>
 
-      <RestaurantsTable searchValue={searchValue} />
+      <RestaurantsTable searchValue={searchValue} onEdit={handleEdit} />
 
-      {/* Add Restaurant Modal */}
+      {/* Add/Edit Restaurant Modal */}
       <AddRestaurantModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={handleCloseModal}
+        editData={editRestaurant}
       />
     </div>
   );

@@ -1,11 +1,17 @@
-import { useMemo } from "react";
-import { Table, type TableColumn } from "../../../../../components/ui";
+import { useMemo, useState } from "react";
+import {
+  Table,
+  type TableColumn,
+  ConfirmationModal,
+} from "../../../../../components/ui";
 import {
   useAmenityRequests,
+  useDeleteAmenityRequest,
   type AmenityRequestWithDetails,
 } from "../../../../../hooks/amenities/amenity-requests/useAmenityRequests";
 import { useHotelId } from "../../../../../hooks/useHotelContext";
 import { usePagination } from "../../../../../hooks";
+import { AmenityRequestDetailModal } from "./amenity-request-detail-modal";
 
 interface AmenityOrder extends Record<string, unknown> {
   id: string;
@@ -23,6 +29,12 @@ interface AmenityOrdersTableProps {
 
 export function AmenityOrdersTable({ searchValue }: AmenityOrdersTableProps) {
   const hotelId = useHotelId();
+  const [selectedRequest, setSelectedRequest] =
+    useState<AmenityRequestWithDetails | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [requestToDelete, setRequestToDelete] =
+    useState<AmenityRequestWithDetails | null>(null);
 
   // Fetch amenity requests using the hook
   const {
@@ -30,6 +42,50 @@ export function AmenityOrdersTable({ searchValue }: AmenityOrdersTableProps) {
     isLoading,
     error,
   } = useAmenityRequests(hotelId || undefined);
+
+  // Get delete mutation
+  const deleteRequest = useDeleteAmenityRequest();
+
+  // Handle row click to open details modal
+  const handleRowClick = (row: AmenityOrder) => {
+    const fullRequest = amenityRequests?.find(
+      (request) => request.id === row.id
+    );
+    if (fullRequest) {
+      setSelectedRequest(fullRequest);
+      setIsDetailModalOpen(true);
+    }
+  };
+
+  // Close detail modal
+  const handleCloseModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedRequest(null);
+  };
+
+  // Delete handler: open confirmation modal
+  const handleDelete = () => {
+    if (selectedRequest) {
+      setRequestToDelete(selectedRequest);
+      setIsDeleteConfirmOpen(true);
+      setIsDetailModalOpen(false);
+    }
+  };
+
+  // Confirm delete action
+  const confirmDelete = () => {
+    if (requestToDelete && hotelId) {
+      deleteRequest.mutate(
+        { id: requestToDelete.id, hotelId },
+        {
+          onSuccess: () => {
+            setIsDeleteConfirmOpen(false);
+            setRequestToDelete(null);
+          },
+        }
+      );
+    }
+  };
 
   // Define table columns for amenity orders
   const orderColumns: TableColumn<AmenityOrder>[] = [
@@ -131,6 +187,7 @@ export function AmenityOrdersTable({ searchValue }: AmenityOrdersTableProps) {
           data={paginatedData}
           loading={isLoading}
           emptyMessage="No amenity orders found. Orders will appear here once guests start requesting amenities."
+          onRowClick={handleRowClick}
           showPagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -139,6 +196,29 @@ export function AmenityOrdersTable({ searchValue }: AmenityOrdersTableProps) {
           onPageChange={setCurrentPage}
         />
       </div>
+
+      {/* Request Detail Modal */}
+      <AmenityRequestDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseModal}
+        request={selectedRequest}
+        onDelete={handleDelete}
+      />
+
+      {/* Confirmation Modal for Delete */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        title="Delete Amenity Request"
+        message="Are you sure you want to delete this amenity request? This action cannot be undone."
+        confirmText="Delete"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onClose={() => {
+          setIsDeleteConfirmOpen(false);
+          setRequestToDelete(null);
+        }}
+        loading={deleteRequest.isPending}
+      />
     </div>
   );
 }

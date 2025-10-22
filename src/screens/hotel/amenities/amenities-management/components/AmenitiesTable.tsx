@@ -3,14 +3,17 @@ import {
   Table,
   type TableColumn,
   StatusBadge,
+  ConfirmationModal,
 } from "../../../../../components/ui";
 import {
   useAmenities,
   useUpdateAmenity,
+  useDeleteAmenity,
 } from "../../../../../hooks/amenities/amenities/useAmenities";
 import { useHotelId } from "../../../../../hooks/useHotelContext";
 import { usePagination } from "../../../../../hooks";
 import { AmenityDetailModal } from "./amenity-detail-modal";
+import { AddAmenityModal } from "./add-amenity-modal";
 import type { Database } from "../../../../../types/database";
 
 type AmenityRow = Database["public"]["Tables"]["amenities"]["Row"];
@@ -36,6 +39,12 @@ export function AmenitiesTable({ searchValue }: AmenitiesTableProps) {
     null
   );
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [amenityToEdit, setAmenityToEdit] = useState<AmenityRow | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [amenityToDelete, setAmenityToDelete] = useState<AmenityRow | null>(
+    null
+  );
 
   // Fetch amenities using the hook
   const {
@@ -44,8 +53,9 @@ export function AmenitiesTable({ searchValue }: AmenitiesTableProps) {
     error,
   } = useAmenities(hotelId || undefined);
 
-  // Get the update mutation
+  // Get the mutations
   const updateAmenity = useUpdateAmenity();
+  const deleteAmenity = useDeleteAmenity();
 
   // Handle status toggle
   const handleStatusToggle = async (id: string, newStatus: boolean) => {
@@ -67,6 +77,39 @@ export function AmenitiesTable({ searchValue }: AmenitiesTableProps) {
   const handleCloseModal = () => {
     setIsDetailModalOpen(false);
     setSelectedAmenity(null);
+  };
+
+  // Edit handler: open edit modal
+  const handleEdit = () => {
+    if (selectedAmenity) {
+      setAmenityToEdit(selectedAmenity);
+      setIsEditModalOpen(true);
+      setIsDetailModalOpen(false);
+    }
+  };
+
+  // Delete handler: open confirmation modal
+  const handleDelete = () => {
+    if (selectedAmenity) {
+      setAmenityToDelete(selectedAmenity);
+      setIsDeleteConfirmOpen(true);
+      setIsDetailModalOpen(false);
+    }
+  };
+
+  // Confirm delete action
+  const confirmDelete = () => {
+    if (amenityToDelete && hotelId) {
+      deleteAmenity.mutate(
+        { id: amenityToDelete.id, hotelId },
+        {
+          onSuccess: () => {
+            setIsDeleteConfirmOpen(false);
+            setAmenityToDelete(null);
+          },
+        }
+      );
+    }
   };
 
   // Define table columns for amenities
@@ -232,11 +275,38 @@ export function AmenitiesTable({ searchValue }: AmenitiesTableProps) {
         />
       </div>
 
-      {/* Detail Modal */}
+      {/* Detail Modal with Edit/Delete actions */}
       <AmenityDetailModal
         isOpen={isDetailModalOpen}
         onClose={handleCloseModal}
         amenity={selectedAmenity}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+
+      {/* Confirmation Modal for Delete */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        title="Delete Amenity"
+        message="Are you sure you want to delete this amenity? This action cannot be undone."
+        confirmText="Delete"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onClose={() => {
+          setIsDeleteConfirmOpen(false);
+          setAmenityToDelete(null);
+        }}
+        loading={deleteAmenity.isPending}
+      />
+
+      {/* Edit Amenity Modal */}
+      <AddAmenityModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setAmenityToEdit(null);
+        }}
+        amenity={amenityToEdit}
       />
     </div>
   );
