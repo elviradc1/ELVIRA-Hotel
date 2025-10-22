@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../../services/supabase";
 import { useOptimizedQuery } from "../api/useOptimizedQuery";
 import { useRealtimeSubscription } from "../realtime/useRealtimeSubscription";
-import { Database } from "../../types/database";
+import type { Database } from "../../types/database";
 
 type Guest = Database["public"]["Tables"]["guests"]["Row"];
 type GuestPersonalData =

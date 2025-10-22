@@ -10,10 +10,12 @@ export function TableCell<T extends Record<string, unknown>>({
   item,
 }: TableCellProps<T>) {
   return (
-    <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
-      {column.render
-        ? column.render(item[column.key], item)
-        : String(item[column.key] || "")}
+    <td className="px-6 py-4 text-center text-sm text-gray-900 max-w-xs">
+      <div className="overflow-wrap-anywhere">
+        {column.render
+          ? column.render(item[column.key], item)
+          : String(item[column.key] || "")}
+      </div>
     </td>
   );
 }

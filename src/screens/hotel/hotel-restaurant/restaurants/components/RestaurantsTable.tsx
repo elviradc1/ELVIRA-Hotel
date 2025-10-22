@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import { Table, type TableColumn } from "../../../../../components/ui";
 import { useRestaurants } from "../../../../../hooks/hotel-restaurant/restaurants/useRestaurants";
 import { useHotelId } from "../../../../../hooks/useHotelContext";
@@ -19,39 +19,14 @@ interface RestaurantsTableProps {
 }
 
 export function RestaurantsTable({ searchValue }: RestaurantsTableProps) {
-  console.log("🍽️🍽️🍽️ RESTAURANTS TABLE COMPONENT LOADED 🍽️🍽️🍽️");
-
   const hotelId = useHotelId();
-
-  console.log("🍽️ RestaurantsTable - Component Rendered:", {
-    hotelId,
-    searchValue,
-    timestamp: new Date().toISOString(),
-  });
 
   // Fetch restaurants using the hook
   const {
     data: restaurants,
     isLoading,
     error,
-    isFetching,
-    dataUpdatedAt,
   } = useRestaurants(hotelId || undefined);
-
-  useEffect(() => {
-    console.log("🍽️ Restaurants - Data State Changed:", {
-      hotelId,
-      isLoading,
-      isFetching,
-      error: error?.message,
-      dataCount: restaurants?.length || 0,
-      dataUpdatedAt: dataUpdatedAt
-        ? new Date(dataUpdatedAt).toISOString()
-        : "never",
-      rawData: restaurants,
-      timestamp: new Date().toISOString(),
-    });
-  }, [hotelId, isLoading, isFetching, error, restaurants, dataUpdatedAt]);
 
   // Define table columns for restaurants
   const columns: TableColumn<Restaurant>[] = [
@@ -80,16 +55,10 @@ export function RestaurantsTable({ searchValue }: RestaurantsTableProps) {
   // Transform database data to table format with search filtering
   const restaurantData: Restaurant[] = useMemo(() => {
     if (!restaurants) {
-      console.log("🍽️ Restaurants - No data to transform");
       return [];
     }
 
-    console.log("🍽️ Restaurants - Transforming data:", {
-      rawCount: restaurants.length,
-      searchValue,
-    });
-
-    const transformed = restaurants
+    return restaurants
       .filter((restaurant: RestaurantRow) => {
         if (!searchValue) return true;
 
@@ -108,48 +77,20 @@ export function RestaurantsTable({ searchValue }: RestaurantsTableProps) {
         cuisine: restaurant.cuisine,
         description: restaurant.description || "N/A",
       }));
-
-    console.log("🍽️ Restaurants - Transformed data:", {
-      transformedCount: transformed.length,
-      sample: transformed[0],
-    });
-
-    return transformed;
   }, [restaurants, searchValue]);
 
-  // Log any errors
   if (error) {
-    console.error("🍽️ Restaurants - Error loading data:", error);
+    return (
+      <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
+        <p className="text-sm text-red-600">
+          Error loading restaurants: {error.message}
+        </p>
+      </div>
+    );
   }
 
   return (
     <div className="mt-6">
-      {/* Always visible debug banner */}
-      <div className="mb-4 p-3 bg-yellow-50 border border-yellow-300 rounded text-sm">
-        <div className="font-bold text-yellow-900 mb-2">🍽️ Debug Info:</div>
-        <div className="text-yellow-800 space-y-1 text-xs">
-          <div>Hotel ID: {hotelId || "Not found"}</div>
-          <div>Loading: {isLoading ? "Yes" : "No"}</div>
-          <div>Fetching: {isFetching ? "Yes" : "No"}</div>
-          <div>Data Count: {restaurants?.length || 0}</div>
-          <div>Filtered Count: {restaurantData.length}</div>
-          <div>Error: {error?.message || "None"}</div>
-        </div>
-      </div>
-
-      {/* Debug info */}
-      {(isLoading || isFetching) && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
-          ⏳ {isLoading ? "Loading" : "Refetching"} restaurants...
-        </div>
-      )}
-
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-800">
-          ❌ Error: {error.message}
-        </div>
-      )}
-
       {searchValue && (
         <p className="text-sm text-gray-600 mb-4">
           Searching for: "{searchValue}" - Found {restaurantData.length}{" "}

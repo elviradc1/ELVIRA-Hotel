@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import { Table, type TableColumn } from "../../../../../components/ui";
 import {
   useAmenityRequests,
@@ -21,53 +21,14 @@ interface AmenityOrdersTableProps {
 }
 
 export function AmenityOrdersTable({ searchValue }: AmenityOrdersTableProps) {
-  console.log("🎫🎫🎫 AMENITY ORDERS TABLE COMPONENT LOADED 🎫🎫🎫");
-
   const hotelId = useHotelId();
-
-  console.log("🎫 AmenityOrdersTable - Component Rendered:", {
-    hotelId,
-    searchValue,
-    timestamp: new Date().toISOString(),
-  });
 
   // Fetch amenity requests using the hook
   const {
     data: amenityRequests,
     isLoading,
     error,
-    isFetching,
-    dataUpdatedAt,
   } = useAmenityRequests(hotelId || undefined);
-
-  useEffect(() => {
-    console.log("🎫 AmenityRequests - Data State Changed:", {
-      hotelId,
-      isLoading,
-      isFetching,
-      error: error?.message,
-      dataCount: amenityRequests?.length || 0,
-      dataUpdatedAt: dataUpdatedAt
-        ? new Date(dataUpdatedAt).toISOString()
-        : "never",
-      rawData: amenityRequests,
-      timestamp: new Date().toISOString(),
-    });
-  }, [hotelId, isLoading, isFetching, error, amenityRequests, dataUpdatedAt]);
-  useEffect(() => {
-    console.log("🎫 AmenityRequests - Data State Changed:", {
-      hotelId,
-      isLoading,
-      isFetching,
-      error: error?.message,
-      dataCount: amenityRequests?.length || 0,
-      dataUpdatedAt: dataUpdatedAt
-        ? new Date(dataUpdatedAt).toISOString()
-        : "never",
-      rawData: amenityRequests,
-      timestamp: new Date().toISOString(),
-    });
-  }, [hotelId, isLoading, isFetching, error, amenityRequests, dataUpdatedAt]);
 
   // Define table columns for amenity orders
   const orderColumns: TableColumn<AmenityOrder>[] = [
@@ -106,16 +67,10 @@ export function AmenityOrdersTable({ searchValue }: AmenityOrdersTableProps) {
   // Transform database data to table format with search filtering
   const orderData: AmenityOrder[] = useMemo(() => {
     if (!amenityRequests) {
-      console.log("🎫 AmenityRequests - No data to transform");
       return [];
     }
 
-    console.log("🎫 AmenityRequests - Transforming data:", {
-      rawCount: amenityRequests.length,
-      searchValue,
-    });
-
-    const transformed = amenityRequests
+    return amenityRequests
       .filter((request: AmenityRequestWithDetails) => {
         if (!searchValue) return true;
 
@@ -139,127 +94,20 @@ export function AmenityOrdersTable({ searchValue }: AmenityOrdersTableProps) {
           ? new Date(request.created_at).toLocaleString()
           : "N/A",
       }));
-
-    console.log("🎫 AmenityRequests - Transformed data:", {
-      transformedCount: transformed.length,
-      sample: transformed[0],
-    });
-
-    return transformed;
   }, [amenityRequests, searchValue]);
 
-  // Debug banner (always visible)
-  const debugInfo = (
-    <div
-      style={{
-        padding: "12px",
-        marginBottom: "16px",
-        backgroundColor: "#fef3c7",
-        border: "2px solid #f59e0b",
-        borderRadius: "8px",
-        fontFamily: "monospace",
-        fontSize: "13px",
-      }}
-    >
-      <div
-        style={{ fontWeight: "bold", marginBottom: "8px", color: "#92400e" }}
-      >
-        🎫 AMENITY ORDERS DEBUG INFO
-      </div>
-      <div style={{ color: "#78350f" }}>
-        <div>
-          <strong>Hotel ID:</strong> {hotelId || "Not set"}
-        </div>
-        <div>
-          <strong>Loading:</strong> {isLoading ? "Yes" : "No"}
-        </div>
-        <div>
-          <strong>Fetching:</strong> {isFetching ? "Yes" : "No"}
-        </div>
-        <div>
-          <strong>Error:</strong> {error?.message || "None"}
-        </div>
-        <div>
-          <strong>Raw Requests Count:</strong> {amenityRequests?.length || 0}
-        </div>
-        <div>
-          <strong>Filtered Requests Count:</strong> {orderData.length}
-        </div>
-        <div>
-          <strong>Search Value:</strong> "{searchValue}"
-        </div>
-        <div>
-          <strong>Last Updated:</strong>{" "}
-          {dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleString() : "Never"}
-        </div>
-      </div>
-    </div>
-  );
-
   if (error) {
-    console.error("🎫 AmenityRequests - Error loading requests:", error);
     return (
-      <>
-        {debugInfo}
-        <div
-          style={{
-            padding: "20px",
-            backgroundColor: "#fee2e2",
-            border: "2px solid #ef4444",
-            borderRadius: "8px",
-            color: "#991b1b",
-          }}
-        >
-          <strong>Error loading amenity requests:</strong> {error.message}
-        </div>
-      </>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <>
-        {debugInfo}
-        <div
-          style={{
-            padding: "20px",
-            backgroundColor: "#dbeafe",
-            border: "2px solid #3b82f6",
-            borderRadius: "8px",
-            color: "#1e40af",
-            textAlign: "center",
-          }}
-        >
-          Loading amenity requests...
-        </div>
-      </>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <>
-        {debugInfo}
-        <div
-          style={{
-            padding: "20px",
-            backgroundColor: "#dbeafe",
-            border: "2px solid #3b82f6",
-            borderRadius: "8px",
-            color: "#1e40af",
-            textAlign: "center",
-          }}
-        >
-          Loading amenity requests...
-        </div>
-      </>
+      <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
+        <p className="text-sm text-red-600">
+          Error loading amenity requests: {error.message}
+        </p>
+      </div>
     );
   }
 
   return (
     <div className="mt-6">
-      {debugInfo}
-
       {searchValue && (
         <p className="text-sm text-gray-600 mb-4">
           Searching for: "{searchValue}"
@@ -271,7 +119,7 @@ export function AmenityOrdersTable({ searchValue }: AmenityOrdersTableProps) {
         <Table
           columns={orderColumns}
           data={orderData}
-          isLoading={isLoading}
+          loading={isLoading}
           emptyMessage="No amenity orders found. Orders will appear here once guests start requesting amenities."
         />
       </div>

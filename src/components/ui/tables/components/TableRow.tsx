@@ -19,7 +19,7 @@ export function TableRow<T extends Record<string, unknown>>({
         <TableCell key={column.key} column={column} item={item} />
       ))}
       {actions.length > 0 && (
-        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+        <td className="px-6 py-4 text-right text-sm font-medium">
           <TableActions actions={actions} item={item} />
         </td>
       )}

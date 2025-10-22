@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Table, type TableColumn, SearchBox } from "../../../components/ui";
+import { useGuests } from "../../../hooks/guest-management/useGuests";
+import { useHotelContext } from "../../../hooks/useHotelContext";
 
-interface Guest extends Record<string, unknown> {
+interface GuestTableData extends Record<string, unknown> {
   id: string;
   room: string;
   status: string;
@@ -23,6 +25,16 @@ export function GuestManagement({
 }: GuestManagementProps) {
   const [internalSearchValue, setInternalSearchValue] = useState("");
 
+  // Get hotel ID from context
+  const { hotelId } = useHotelContext();
+
+  // Fetch guests data
+  const {
+    data: guests = [],
+    isLoading,
+    error,
+  } = useGuests(hotelId || undefined);
+
   // Use external search value if provided (for tab-based usage), otherwise use internal state
   const searchValue =
     externalSearchValue !== undefined
@@ -34,8 +46,40 @@ export function GuestManagement({
   const handleSearchClear = () => {
     setSearchValue("");
   };
+
+  // Transform and filter guest data
+  const guestData = useMemo(() => {
+    const transformedData: GuestTableData[] = guests.map((guest) => ({
+      id: guest.id,
+      room: guest.room_number,
+      status: guest.is_active ? "Active" : "Inactive",
+      dnd: guest.dnd_status ? "Yes" : "No",
+      firstName: guest.guest_personal_data?.first_name || "N/A",
+      lastName: guest.guest_personal_data?.last_name || "N/A",
+      email: guest.guest_personal_data?.guest_email || "N/A",
+      phone: guest.guest_personal_data?.phone_number || "N/A",
+      country: guest.guest_personal_data?.country || "N/A",
+      language: guest.guest_personal_data?.language || "N/A",
+    }));
+
+    // Apply search filter
+    if (!searchValue.trim()) {
+      return transformedData;
+    }
+
+    const searchLower = searchValue.toLowerCase();
+    return transformedData.filter(
+      (guest) =>
+        guest.firstName.toLowerCase().includes(searchLower) ||
+        guest.lastName.toLowerCase().includes(searchLower) ||
+        guest.email.toLowerCase().includes(searchLower) ||
+        guest.room.toLowerCase().includes(searchLower) ||
+        guest.phone.toLowerCase().includes(searchLower)
+    );
+  }, [guests, searchValue]);
+
   // Define table columns
-  const columns: TableColumn<Guest>[] = [
+  const columns: TableColumn<GuestTableData>[] = [
     {
       key: "room",
       label: "Room",
@@ -83,9 +127,6 @@ export function GuestManagement({
     },
   ];
 
-  // Empty data array - no mock data
-  const guestData: Guest[] = [];
-
   return (
     <div className="p-6">
       <div className="flex items-center mb-6">
@@ -130,9 +171,18 @@ export function GuestManagement({
           </p>
         )}
 
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-sm text-red-600">
+              Error loading guests: {error.message}
+            </p>
+          </div>
+        )}
+
         <Table
           columns={columns}
           data={guestData}
+          loading={isLoading}
           emptyMessage="No guests found. Guest information will appear here once check-ins begin."
         />
       </div>
