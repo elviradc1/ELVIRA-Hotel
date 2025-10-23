@@ -1,55 +1,60 @@
 import { useState } from "react";
-import { Button } from "../../../../components/ui";
-import {
-  AbsencesTable,
-  AbsenceFormModal,
-  AbsenceDetailModal,
-} from "./components";
-import type { Database } from "../../../../types/database";
-
-type AbsenceRequestRow =
-  Database["public"]["Tables"]["absence_requests"]["Row"];
-
-// Extended type with staff relationship
-interface AbsenceWithStaff extends AbsenceRequestRow {
-  staff?: {
-    id: string;
-    position: string;
-    department: string;
-    hotel_staff_personal_data?: {
-      first_name: string;
-      last_name: string;
-      email: string;
-    };
-  };
-}
+import { Button, ConfirmationModal } from "../../../../components/ui";
+import { AbsencesTable, AbsenceModal } from "./components";
+import type { AbsenceWithStaff } from "./components/modals";
+import { useDeleteAbsenceRequest } from "../../../../hooks/hotel-staff";
 
 interface AbsencesProps {
   searchValue: string;
 }
 
 export function Absences({ searchValue }: AbsencesProps) {
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"create" | "edit" | "view">(
+    "create"
+  );
   const [selectedAbsence, setSelectedAbsence] =
     useState<AbsenceWithStaff | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const deleteAbsenceRequest = useDeleteAbsenceRequest();
 
   const handleAddNew = () => {
-    setIsAddModalOpen(true);
+    setSelectedAbsence(null);
+    setModalMode("create");
+    setIsModalOpen(true);
   };
 
   const handleRowClick = (absence: AbsenceWithStaff) => {
     setSelectedAbsence(absence);
-    setIsDetailModalOpen(true);
+    setModalMode("view");
+    setIsModalOpen(true);
   };
 
-  const handleCloseAddModal = () => {
-    setIsAddModalOpen(false);
+  const handleEdit = () => {
+    setModalMode("edit");
   };
 
-  const handleCloseDetailModal = () => {
-    setIsDetailModalOpen(false);
+  const handleDelete = () => {
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (selectedAbsence) {
+      try {
+        await deleteAbsenceRequest.mutateAsync(selectedAbsence.id);
+        setIsDeleteConfirmOpen(false);
+        setIsModalOpen(false);
+        setSelectedAbsence(null);
+      } catch (error) {
+        console.error("Error deleting absence request:", error);
+      }
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
     setSelectedAbsence(null);
+    setModalMode("create");
   };
 
   return (
@@ -66,18 +71,25 @@ export function Absences({ searchValue }: AbsencesProps) {
 
       <AbsencesTable searchValue={searchValue} onRowClick={handleRowClick} />
 
-      {/* Add New Absence Modal */}
-      <AbsenceFormModal
-        isOpen={isAddModalOpen}
-        onClose={handleCloseAddModal}
-        editData={null}
+      {/* Unified Absence Modal */}
+      <AbsenceModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        absence={selectedAbsence}
+        mode={modalMode}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
       />
 
-      {/* Absence Detail Modal */}
-      <AbsenceDetailModal
-        isOpen={isDetailModalOpen}
-        onClose={handleCloseDetailModal}
-        absence={selectedAbsence}
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Absence Request"
+        message="Are you sure you want to delete this absence request? This action cannot be undone."
+        confirmText="Delete"
+        variant="danger"
       />
     </div>
   );

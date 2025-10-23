@@ -1,1 +1,0 @@
-export { AbsenceDetailModal } from "./AbsenceDetailModal";

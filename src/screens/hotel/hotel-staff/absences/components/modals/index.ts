@@ -1,2 +1,2 @@
-export { AbsenceFormModal } from "./AbsenceFormModal";
-export { AbsenceDetailModal } from "./detail";
+export { AbsenceModal } from "./absence-modal";
+export type { AbsenceModalProps, AbsenceWithStaff } from "./absence-modal";

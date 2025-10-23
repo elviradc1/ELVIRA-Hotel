@@ -1,2 +1,2 @@
-export { TaskFormModal } from "./TaskFormModal";
-export { TaskDetailModal } from "./detail";
+export { TaskModal } from "./task-modal";
+export type { TaskModalProps, TaskWithStaff } from "./task-modal";
