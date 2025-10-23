@@ -32,6 +32,12 @@ export const queryKeys = {
   staffMessages: (conversationId: string) =>
     ["staff-messages", conversationId] as const,
 
+  // Guest Communication queries
+  guestConversations: (hotelId: string) =>
+    ["guest-conversations", "hotel", hotelId] as const,
+  guestMessages: (conversationId: string) =>
+    ["guest-messages", conversationId] as const,
+
   // Announcements
   announcements: ["announcements"] as const,
   announcement: (id: string) => ["announcements", id] as const,
