@@ -30,13 +30,9 @@ export function useApprovedThirdPartyPlaces(category?: string) {
       const { data, error } = await query;
 
       if (error) {
-        console.error("❌ Error fetching places:", error);
-        throw error;
+throw error;
       }
-
-      console.log("✅ Fetched places:", data?.length, "Sample:", data?.[0]);
-
-      return data || [];
+return data || [];
     },
     config: {
       staleTime: 10 * 60 * 1000, // 10 minutes

@@ -52,13 +52,11 @@ export function StaffCommunication() {
 
   // Handle add button click
   const handleAddClick = () => {
-    console.log("Opening group chat modal");
     setIsGroupModalOpen(true);
   };
 
   // Handle filter button click
   const handleFilterClick = () => {
-    console.log("Filter staff conversations");
     // TODO: Implement filter functionality
   };
 
@@ -72,27 +70,13 @@ export function StaffCommunication() {
   // Handle removing a participant from group
   const handleRemoveParticipant = async (participantId: string) => {
     if (!conversationId) return;
-
-    try {
-      await removeParticipant(conversationId, participantId);
-      console.log("✅ Participant removed successfully");
-    } catch (error) {
-      console.error("❌ Error removing participant:", error);
-      throw error;
-    }
+    await removeParticipant(conversationId, participantId);
   };
 
   // Handle adding participants to group
   const handleAddParticipants = async (staffIds: string[]) => {
     if (!conversationId) return;
-
-    try {
-      await addParticipants(conversationId, staffIds);
-      console.log("✅ Participants added successfully");
-    } catch (error) {
-      console.error("❌ Error adding participants:", error);
-      throw error;
-    }
+    await addParticipants(conversationId, staffIds);
   };
 
   // Handle group chat creation
@@ -101,33 +85,26 @@ export function StaffCommunication() {
     selectedStaffIds: string[]
   ) => {
     if (!user?.id || !currentUserHotel?.hotelId) {
-      console.error("Missing user ID or hotel ID");
       return;
     }
 
     try {
-      console.log("Creating group chat:", groupName, selectedStaffIds);
       const newConversationId = await createGroupChat({
         hotelId: currentUserHotel.hotelId,
         createdBy: user.id,
         groupName,
         participantIds: selectedStaffIds,
       });
-
-      console.log("✅ Group chat created successfully:", newConversationId);
-
       // Select the new conversation
       setConversationId(newConversationId);
-    } catch (error) {
-      console.error("❌ Error creating group chat:", error);
-      throw error; // Re-throw to let modal handle error state
+    } catch {
+      // Re-throw to let modal handle error state
+      throw new Error("Failed to create group chat");
     }
   };
 
   // Handle staff selection and conversation creation
   const handleStaffSelect = async (conversationIdOrStaffId: string) => {
-    console.log("📞 [StaffCommunication] Selected:", conversationIdOrStaffId);
-
     // Check if this is an existing conversation
     const existingConversation = conversationsList?.find(
       (c) => c.id === conversationIdOrStaffId
@@ -135,17 +112,12 @@ export function StaffCommunication() {
 
     if (existingConversation) {
       // It's an existing conversation (including groups)
-      console.log(
-        "✅ [StaffCommunication] Opening existing conversation:",
-        conversationIdOrStaffId
-      );
       setConversationId(conversationIdOrStaffId);
       return;
     }
 
     // It's a staff member ID - create or get 1-on-1 conversation
     if (!user?.id) {
-      console.warn("⚠️ [StaffCommunication] No user ID available");
       return;
     }
 
@@ -157,32 +129,18 @@ export function StaffCommunication() {
     );
 
     if (cachedConversationId) {
-      console.log(
-        "⚡ [StaffCommunication] Using cached conversation:",
-        cachedConversationId
-      );
       setConversationId(cachedConversationId);
       return;
     }
 
     // Get or create conversation
-    console.log(
-      "🔍 [StaffCommunication] No cached conversation, creating new one..."
-    );
     try {
       const conversation = await getOrCreateConversation.mutateAsync(
         conversationIdOrStaffId
       );
-      console.log(
-        "✅ [StaffCommunication] Conversation ready:",
-        conversation.id
-      );
       setConversationId(conversation.id);
-    } catch (error) {
-      console.error(
-        "❌ [StaffCommunication] Error getting/creating conversation:",
-        error
-      );
+    } catch {
+      console.error("Failed to get or create conversation");
     }
   };
 
@@ -254,7 +212,7 @@ export function StaffCommunication() {
   interface StaffMessage {
     id: string;
     sender_id: string;
-    message: string | null;
+    content: string | null;
     created_at: string | null;
     sender: {
       id: string;
@@ -272,7 +230,7 @@ export function StaffCommunication() {
       senderName: msg.sender?.hotel_staff_personal_data
         ? `${msg.sender.hotel_staff_personal_data.first_name} ${msg.sender.hotel_staff_personal_data.last_name}`
         : "Unknown",
-      content: msg.message || "",
+      content: msg.content || "",
       timestamp: new Date(msg.created_at || Date.now()),
       type: "text" as const,
       isOwn: msg.sender_id === user?.id,
@@ -282,24 +240,15 @@ export function StaffCommunication() {
 
   const handleSendMessage = async (content: string) => {
     if (!conversationId) {
-      console.warn(
-        "⚠️ [StaffCommunication] Cannot send message: No conversation ID"
-      );
       return;
     }
-
-    console.log(
-      "📤 [StaffCommunication] Sending message to conversation:",
-      conversationId
-    );
     try {
       await sendMessage.mutateAsync({
         conversationId,
         message: content,
       });
-      console.log("✅ [StaffCommunication] Message sent successfully");
-    } catch (error) {
-      console.error("❌ [StaffCommunication] Error sending message:", error);
+    } catch {
+      console.error("Failed to send message");
     }
   };
 

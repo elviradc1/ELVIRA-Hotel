@@ -42,8 +42,7 @@ export function RealTimeChat({
       await sendMessageMutation.mutateAsync(newMessage);
       setMessageText("");
     } catch (error) {
-      console.error("Failed to send message:", error);
-    }
+}
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

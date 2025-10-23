@@ -113,8 +113,7 @@ export function useMenuItemForm(
     if (!validateForm()) return;
 
     if (!hotelId || !user?.id) {
-      console.error("Hotel ID or User ID is missing");
-      return;
+return;
     }
 
     try {
@@ -155,11 +154,7 @@ export function useMenuItemForm(
       resetForm();
       onSuccess();
     } catch (error) {
-      console.error(
-        `Error ${isEditMode ? "updating" : "creating"} menu item:`,
-        error
-      );
-    }
+}
   };
 
   const resetForm = () => {

@@ -47,8 +47,7 @@ export function useAbsences(hotelId?: string) {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("❌ Fetch absence requests error:", error);
-        throw error;
+throw error;
       }
 
       return data || [];
@@ -78,15 +77,7 @@ export function useAbsences(hotelId?: string) {
  */
 export function useCurrentHotelAbsences() {
   const { hotelId, isLoading: hotelIdLoading } = useCurrentUserHotelId();
-
-  console.log("🏨 useCurrentHotelAbsences Debug:", {
-    hotelId,
-    hotelIdLoading,
-    enabled: !!hotelId,
-    timestamp: new Date().toISOString(),
-  });
-
-  return useAbsences(hotelId || undefined);
+return useAbsences(hotelId || undefined);
 }
 
 /**
@@ -101,10 +92,7 @@ export function useCreateAbsenceRequest() {
       request: Omit<Inserts<"absence_requests">, "hotel_id">
     ) => {
       if (!hotelId) throw new Error("Hotel ID is required");
-
-      console.log("➕ Creating absence request:", request);
-
-      const { data, error } = await supabase
+const { data, error } = await supabase
         .from("absence_requests")
         .insert({
           ...request,
@@ -139,12 +127,9 @@ export function useCreateAbsenceRequest() {
         .single();
 
       if (error) {
-        console.error("❌ Create absence request error:", error);
-        throw error;
+throw error;
       }
-
-      console.log("✅ Absence request created successfully:", data);
-      return data;
+return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -169,9 +154,7 @@ export function useUpdateAbsenceRequest() {
       requestId: string;
       updates: Partial<Inserts<"absence_requests">>;
     }) => {
-      console.log("📝 Updating absence request:", requestId, updates);
-
-      const { data, error } = await supabase
+const { data, error } = await supabase
         .from("absence_requests")
         .update(updates)
         .eq("id", requestId)
@@ -204,12 +187,9 @@ export function useUpdateAbsenceRequest() {
         .single();
 
       if (error) {
-        console.error("❌ Update absence request error:", error);
-        throw error;
+throw error;
       }
-
-      console.log("✅ Absence request updated successfully:", data);
-      return data;
+return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -228,20 +208,15 @@ export function useDeleteAbsenceRequest() {
 
   return useMutation({
     mutationFn: async (requestId: string) => {
-      console.log("🗑️ Deleting absence request:", requestId);
-
-      const { error } = await supabase
+const { error } = await supabase
         .from("absence_requests")
         .delete()
         .eq("id", requestId);
 
       if (error) {
-        console.error("❌ Delete absence request error:", error);
-        throw error;
+throw error;
       }
-
-      console.log("✅ Absence request deleted successfully");
-      return requestId;
+return requestId;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

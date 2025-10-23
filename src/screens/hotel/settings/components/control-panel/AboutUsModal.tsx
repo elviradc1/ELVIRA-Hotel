@@ -45,8 +45,7 @@ export function AboutUsModal({
       await onSave(formData);
       onClose();
     } catch (error) {
-      console.error("Error saving About Us data:", error);
-    } finally {
+} finally {
       setIsSaving(false);
     }
   };

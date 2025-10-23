@@ -29,8 +29,7 @@ export function useStaffConversationCache() {
         );
 
       if (error) {
-        console.error("Error fetching conversation cache:", error);
-        return {};
+return {};
       }
 
       if (!participants) return {};
@@ -58,13 +57,7 @@ export function useStaffConversationCache() {
           cache[key2] = conversationId;
         }
       });
-
-      console.log(
-        "📦 Conversation cache built:",
-        Object.keys(cache).length / 2,
-        "conversations"
-      );
-      return cache;
+return cache;
     },
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 5, // 5 minutes

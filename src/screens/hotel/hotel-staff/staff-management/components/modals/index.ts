@@ -1,2 +1,2 @@
 export { StaffFormModal } from "./StaffFormModal";
-export { StaffDetailModal } from "./detail";
+export { StaffDetailModal } from "./detail/StaffDetailModal";

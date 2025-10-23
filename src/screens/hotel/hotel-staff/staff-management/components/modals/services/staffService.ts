@@ -37,8 +37,7 @@ export async function createStaffMember(
     );
 
     if (error) {
-      console.error("Edge function error:", error);
-      throw new Error(error.message || "Failed to create staff member");
+throw new Error(error.message || "Failed to create staff member");
     }
 
     if (data?.error) {
@@ -47,8 +46,7 @@ export async function createStaffMember(
 
     return data as CreateStaffResponse;
   } catch (error) {
-    console.error("Error creating staff member:", error);
-    throw error;
+throw error;
   }
 }
 
@@ -84,8 +82,7 @@ export async function updateStaffMember(params: UpdateStaffParams) {
         .eq("id", staffId);
 
       if (staffError) {
-        console.error("Error updating staff:", staffError);
-        throw staffError;
+throw staffError;
       }
     }
 
@@ -115,14 +112,12 @@ export async function updateStaffMember(params: UpdateStaffParams) {
         .eq("staff_id", staffId);
 
       if (personalError) {
-        console.error("Error updating personal data:", personalError);
-        throw personalError;
+throw personalError;
       }
     }
 
     return { success: true };
   } catch (error) {
-    console.error("Error updating staff member:", error);
-    throw error;
+throw error;
   }
 }

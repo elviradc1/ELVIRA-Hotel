@@ -32,32 +32,18 @@ export const authService = {
   },
 
   async getUserProfile(userId: string): Promise<UserProfile | null> {
-    console.log("🔵 authService: Fetching user profile for:", userId);
-
-    try {
+try {
       const { data, error } = await supabase
         .from("profiles")
         .select("id, email, role, created_at")
         .eq("id", userId)
         .single();
-
-      console.log("🔵 authService: Profile query result:", {
-        hasData: !!data,
-        data,
-        error,
-        userId,
-      });
-
-      if (error) {
-        console.error("🔴 authService: Error fetching user profile:", error);
-        return null;
+if (error) {
+return null;
       }
-
-      console.log("🟢 authService: Successfully fetched profile:", data);
-      return data;
+return data;
     } catch (error) {
-      console.error("🔴 authService: Exception while fetching profile:", error);
-      return null;
+return null;
     }
   },
 

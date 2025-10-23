@@ -30,18 +30,8 @@ interface HotelProviderProps {
 }
 
 export function HotelProvider({ children }: HotelProviderProps) {
-  console.log("🟢 HotelProvider: Initializing...");
-
-  const { data: hotelInfo, isLoading, error } = useCurrentUserHotel();
-
-  console.log("🟢 HotelProvider: Status:", {
-    isLoading,
-    hasHotelInfo: !!hotelInfo,
-    hotelId: hotelInfo?.hotelId,
-    error: error?.message,
-  });
-
-  const contextValue: HotelContextType = {
+const { data: hotelInfo, isLoading, error } = useCurrentUserHotel();
+const contextValue: HotelContextType = {
     hotel: (hotelInfo?.hotel as Hotel) || null,
     hotelId: hotelInfo?.hotelId || null,
     staffInfo: hotelInfo
@@ -59,13 +49,7 @@ export function HotelProvider({ children }: HotelProviderProps) {
     isLoading,
     error,
   };
-
-  console.log(
-    "🟢 HotelProvider: Providing context with hotelId:",
-    contextValue.hotelId
-  );
-
-  return (
+return (
     <HotelContext.Provider value={contextValue}>
       {children}
     </HotelContext.Provider>

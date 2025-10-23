@@ -14,22 +14,14 @@ export function Auth() {
     e.preventDefault();
     setLoading(true);
     setMessage("");
-
-    console.log("🔵 Auth: Attempting sign in for:", email);
-
-    try {
+try {
       const { error } = await signIn(email, password);
-      console.log("🔵 Auth: Sign in result:", { hasError: !!error, error });
-
-      if (error) {
-        console.log("🔴 Auth: Sign in failed:", error.message);
-        setMessage(error.message);
+if (error) {
+setMessage(error.message);
       } else {
-        console.log("🟢 Auth: Sign in successful");
-      }
+}
     } catch (error) {
-      console.error("🔴 Auth: Exception during sign in:", error);
-      setMessage("An unexpected error occurred");
+setMessage("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -54,8 +46,7 @@ export function Auth() {
         setShowForgotPassword(false);
       }
     } catch (error) {
-      console.error("🔴 Auth: Exception during password reset:", error);
-      setMessage("An unexpected error occurred");
+setMessage("An unexpected error occurred");
     } finally {
       setLoading(false);
     }

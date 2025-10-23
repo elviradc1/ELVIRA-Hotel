@@ -62,8 +62,7 @@ export const useGroupChats = () => {
 
       return conversation.id;
     } catch (error) {
-      console.error("Error creating group chat:", error);
-      throw error;
+throw error;
     } finally {
       setIsCreating(false);
     }
@@ -98,8 +97,7 @@ export const useGroupChats = () => {
 
       if (readsError) throw readsError;
     } catch (error) {
-      console.error("Error adding participants:", error);
-      throw error;
+throw error;
     }
   };
 
@@ -123,8 +121,7 @@ export const useGroupChats = () => {
 
       if (readsError) throw readsError;
     } catch (error) {
-      console.error("Error removing participant:", error);
-      throw error;
+throw error;
     }
   };
 
@@ -137,8 +134,7 @@ export const useGroupChats = () => {
 
       if (error) throw error;
     } catch (error) {
-      console.error("Error updating group name:", error);
-      throw error;
+throw error;
     }
   };
 

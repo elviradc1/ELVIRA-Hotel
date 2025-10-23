@@ -71,14 +71,5 @@ export function useSchedule(hotelId?: string, date?: string) {
  */
 export function useCurrentHotelSchedule(date?: string) {
   const { hotelId, isLoading: hotelIdLoading } = useCurrentUserHotelId();
-
-  console.log("🏨 useCurrentHotelSchedule Debug:", {
-    hotelId,
-    hotelIdLoading,
-    date,
-    enabled: !!hotelId,
-    timestamp: new Date().toISOString(),
-  });
-
-  return useSchedule(hotelId || undefined, date);
+return useSchedule(hotelId || undefined, date);
 }

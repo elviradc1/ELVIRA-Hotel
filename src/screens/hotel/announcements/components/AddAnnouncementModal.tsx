@@ -70,8 +70,7 @@ export function AddAnnouncementModal({
     if (!validateForm()) return;
 
     if (!hotelId || !user?.id) {
-      console.error("Hotel ID or User ID is missing");
-      return;
+return;
     }
 
     try {
@@ -100,8 +99,7 @@ export function AddAnnouncementModal({
       setErrors({ title: "", description: "" });
       onClose();
     } catch (error) {
-      console.error("Error saving announcement:", error);
-    }
+}
   };
 
   const handleClose = () => {

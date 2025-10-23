@@ -67,8 +67,7 @@ export function AddParticipantsView({
       setSearchQuery("");
       setSelectedIds(new Set());
     } catch (error) {
-      console.error("Error adding participants:", error);
-    } finally {
+} finally {
       setIsAdding(false);
     }
   };

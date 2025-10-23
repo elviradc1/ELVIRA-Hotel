@@ -63,8 +63,7 @@ export function ItemImageUpload({
 
       onChange(publicUrl);
     } catch (err) {
-      console.error("Error uploading image:", err);
-      setError("Failed to upload image. Please try again.");
+setError("Failed to upload image. Please try again.");
     } finally {
       setUploading(false);
     }

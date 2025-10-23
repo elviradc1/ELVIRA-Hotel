@@ -22,8 +22,7 @@ export function RecommendedPlaces({ searchValue }: RecommendedPlacesProps) {
           size="md"
           onClick={() => {
             // TODO: Open add recommended place modal
-            console.log("Add Recommended Place clicked");
-          }}
+}}
         >
           <svg
             className="w-4 h-4 mr-2"

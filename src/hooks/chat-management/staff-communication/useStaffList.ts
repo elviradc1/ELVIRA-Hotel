@@ -12,8 +12,7 @@ export function useStaffList(hotelId?: string) {
     queryKey: queryKeys.staffByHotel(hotelId || ""),
     queryFn: async () => {
       if (!hotelId) {
-        console.log("❌ No hotel ID provided to useStaffList");
-        return [];
+return [];
       }
 
       const { data, error } = await supabase
@@ -37,8 +36,7 @@ export function useStaffList(hotelId?: string) {
         .order("hotel_staff_personal_data(first_name)", { ascending: true });
 
       if (error) {
-        console.error("❌ Staff list query error:", error);
-        throw error;
+throw error;
       }
 
       return data;

@@ -9,54 +9,26 @@ import { supabase } from "./supabase";
  * Fetch Google Places API key from Supabase Vault or environment variable
  */
 async function getGooglePlacesApiKey(): Promise<string> {
-  console.log("🔍 Fetching Google Places API key...");
-  console.log("📋 All environment variables:", import.meta.env);
-
-  // Try to get from Vault first
+// Try to get from Vault first
   try {
     const { data, error } = await supabase.rpc("vault_get_secret", {
       secret_name: "GOOGLE_PLACE_API",
     });
 
     if (!error && data) {
-      console.log("✅ API Key fetched successfully from Vault");
-      return data;
+return data;
     }
-
-    console.warn(
-      "⚠️ Could not fetch from Vault, trying environment variable...",
-      error?.message
-    );
-  } catch (vaultError) {
-    console.warn("⚠️ Vault error, trying environment variable...", vaultError);
-  }
+} catch (vaultError) {
+}
 
   // Fallback to environment variable
   const envKey = import.meta.env.VITE_GOOGLE_PLACES_API_KEY;
-
-  console.log(
-    "🔑 Environment variable value:",
-    envKey ? "✓ Found" : "✗ Not found"
-  );
-  console.log(
-    "🔑 Actual value (first 10 chars):",
-    envKey ? envKey.substring(0, 10) + "..." : "undefined"
-  );
-
-  if (envKey) {
-    console.log("✅ API Key fetched from environment variable");
-    return envKey;
+if (envKey) {
+return envKey;
   }
 
   // If both fail, throw error
-  console.error(
-    "❌ Google Places API key not found in Vault or environment variable"
-  );
-  console.error(
-    "💡 Check: 1) .env.local file exists, 2) VITE_GOOGLE_PLACES_API_KEY is set, 3) Dev server was restarted"
-  );
-
-  throw new Error(
+throw new Error(
     "Google Places API key not found. Please add it to Vault as 'GOOGLE_PLACE_API' or set VITE_GOOGLE_PLACES_API_KEY in .env.local and restart the dev server"
   );
 }
@@ -129,9 +101,7 @@ export interface NearbySearchParams {
 export async function fetchNearbyPlaces(
   params: NearbySearchParams
 ): Promise<GooglePlaceResult[]> {
-  console.log("🔍 Fetching nearby places with params:", params);
-
-  return new Promise((resolve, reject) => {
+return new Promise((resolve, reject) => {
     // Wait for Google Maps API to load
     if (!window.google || !window.google.maps || !window.google.maps.places) {
       reject(
@@ -152,10 +122,7 @@ export async function fetchNearbyPlaces(
       type: params.type,
       keyword: params.keyword,
     };
-
-    console.log("📍 Nearby search request:", request);
-
-    let allResults: GooglePlaceResult[] = [];
+let allResults: GooglePlaceResult[] = [];
     let pagesProcessed = 0;
     const maxPages = 3; // Google Places API supports up to 3 pages (60 results total)
 
@@ -166,14 +133,7 @@ export async function fetchNearbyPlaces(
         pageRequest as any,
         (results, status, pagination) => {
           pagesProcessed++;
-          console.log(
-            `📊 Page ${pagesProcessed} - Status:`,
-            status,
-            `Results:`,
-            results?.length
-          );
-
-          if (
+if (
             status === window.google.maps.places.PlacesServiceStatus.OK &&
             results
           ) {
@@ -214,31 +174,22 @@ export async function fetchNearbyPlaces(
 
             // Check if there are more pages and we haven't reached the limit
             if (pagination?.hasNextPage && pagesProcessed < maxPages) {
-              console.log(`⏳ Fetching page ${pagesProcessed + 1}...`);
-              // Google requires a delay before fetching the next page
+// Google requires a delay before fetching the next page
               setTimeout(() => {
                 pagination.nextPage();
               }, 2000); // 2 second delay as required by Google
             } else {
-              console.log(
-                `✅ Fetched total of ${allResults.length} places across ${pagesProcessed} pages`
-              );
-              resolve(allResults);
+resolve(allResults);
             }
           } else if (
             status ===
             window.google.maps.places.PlacesServiceStatus.ZERO_RESULTS
           ) {
-            console.log("ℹ️ No results found");
-            resolve(allResults.length > 0 ? allResults : []);
+resolve(allResults.length > 0 ? allResults : []);
           } else {
-            console.error("❌ Places API error:", status);
-            // If we have some results from previous pages, return those
+// If we have some results from previous pages, return those
             if (allResults.length > 0) {
-              console.log(
-                `⚠️ Returning ${allResults.length} places from previous pages despite error`
-              );
-              resolve(allResults);
+resolve(allResults);
             } else {
               reject(new Error(`Google Places API error: ${status}`));
             }
@@ -286,8 +237,7 @@ export async function fetchPlaceDetails(
 
     return data.result;
   } catch (error) {
-    console.error("Error fetching place details from Google:", error);
-    throw error;
+throw error;
   }
 }
 

@@ -93,12 +93,7 @@ export function StaffList({
                 <button
                   key={staff.id}
                   onClick={() => {
-                    console.log("👆 [StaffList] Staff member clicked:", {
-                      id: staff.id,
-                      name: fullName,
-                      currentlySelected: selectedStaffId,
-                    });
-                    onSelectStaff(staff.id);
+onSelectStaff(staff.id);
                   }}
                   className={`w-full p-4 flex items-center gap-3 hover:bg-gray-50 transition-colors ${
                     selectedStaffId === staff.id ? "bg-emerald-50" : ""

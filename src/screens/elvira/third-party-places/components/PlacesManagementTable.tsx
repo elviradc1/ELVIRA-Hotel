@@ -30,8 +30,7 @@ export function PlacesManagementTable() {
         approved: !currentStatus,
       });
     } catch (error) {
-      console.error("Error toggling approval:", error);
-      alert("Failed to update approval status");
+alert("Failed to update approval status");
     }
   };
 

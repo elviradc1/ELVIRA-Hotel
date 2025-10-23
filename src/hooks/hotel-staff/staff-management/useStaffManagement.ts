@@ -14,8 +14,7 @@ export function useStaffManagement(hotelId?: string) {
     queryKey: queryKeys.staffByHotel(hotelId || ""),
     queryFn: async () => {
       if (!hotelId) {
-        console.log("❌ No hotel ID provided to useStaffManagement");
-        return [];
+return [];
       }
 
       const { data, error } = await supabase
@@ -31,8 +30,7 @@ export function useStaffManagement(hotelId?: string) {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("❌ Staff query error:", error);
-        throw error;
+throw error;
       }
 
       return data;
@@ -62,15 +60,7 @@ export function useStaffManagement(hotelId?: string) {
  */
 export function useCurrentHotelStaff() {
   const { hotelId, isLoading: hotelIdLoading } = useCurrentUserHotelId();
-
-  console.log("🏨 useCurrentHotelStaff Debug:", {
-    hotelId,
-    hotelIdLoading,
-    enabled: !!hotelId,
-    timestamp: new Date().toISOString(),
-  });
-
-  return useStaffManagement(hotelId || undefined);
+return useStaffManagement(hotelId || undefined);
 }
 
 /**
@@ -82,9 +72,7 @@ export function useDeleteStaff() {
 
   return useMutation({
     mutationFn: async (staffId: string) => {
-      console.log("🗑️ Deleting staff member:", staffId);
-
-      try {
+try {
         const {
           data: { session },
         } = await supabase.auth.getSession();
@@ -92,27 +80,18 @@ export function useDeleteStaff() {
         if (!session?.access_token) {
           throw new Error("No session token available");
         }
-
-        console.log("📧 Calling delete-staff-hotel edge function");
-        const response = await supabase.functions.invoke("delete-staff-hotel", {
+const response = await supabase.functions.invoke("delete-staff-hotel", {
           body: { staffId },
           headers: {
             Authorization: `Bearer ${session.access_token}`,
           },
         });
-
-        console.log("📧 Edge function response:", response);
-
-        if (response.error) {
-          console.error("❌ Delete staff failed:", response.error);
-          throw new Error(response.error.message || "Failed to delete staff");
+if (response.error) {
+throw new Error(response.error.message || "Failed to delete staff");
         }
-
-        console.log("✅ Staff deleted successfully:", response.data);
-        return response.data;
+return response.data;
       } catch (error) {
-        console.error("❌ Error deleting staff:", error);
-        throw error;
+throw error;
       }
     },
     onSuccess: () => {

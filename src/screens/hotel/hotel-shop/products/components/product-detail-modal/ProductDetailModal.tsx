@@ -40,8 +40,7 @@ export function ProductDetailModal({
         updates: { is_active: newStatus },
       });
     } catch (error) {
-      console.error("Error updating status:", error);
-    } finally {
+} finally {
       setIsUpdating(false);
     }
   };

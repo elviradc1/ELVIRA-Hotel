@@ -84,8 +84,7 @@ export const CreateGroupChatModal: React.FC<CreateGroupChatModalProps> = ({
       setSearchQuery("");
       onClose();
     } catch (error) {
-      console.error("Error creating group:", error);
-    } finally {
+} finally {
       setIsCreating(false);
     }
   };

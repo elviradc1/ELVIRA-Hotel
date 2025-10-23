@@ -87,8 +87,7 @@ export function AddEmergencyContactModal({
     }
 
     if (!hotelId) {
-      console.error("No hotel ID available");
-      return;
+return;
     }
 
     try {
@@ -123,8 +122,7 @@ export function AddEmergencyContactModal({
       });
       onClose();
     } catch (error) {
-      console.error("Error saving emergency contact:", error);
-    }
+}
   };
 
   const handleClose = () => {

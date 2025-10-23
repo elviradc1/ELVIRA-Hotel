@@ -124,8 +124,7 @@ export function useFetchAndStoreGooglePlaces() {
               .eq("id", existing.id);
 
             if (error) {
-              console.error(`Error updating place ${place.name}:`, error);
-            } else {
+} else {
               updated++;
             }
           } else {
@@ -138,8 +137,7 @@ export function useFetchAndStoreGooglePlaces() {
             .insert(placeData);
 
           if (error) {
-            console.error(`Error inserting place ${place.name}:`, error);
-          } else {
+} else {
             inserted++;
           }
         }

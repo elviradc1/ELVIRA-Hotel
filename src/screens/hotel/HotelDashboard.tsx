@@ -45,20 +45,10 @@ const componentMap = {
 
 // Inner dashboard component that uses hotel context
 function DashboardContent({ user, onSignOut }: HotelDashboardProps) {
-  console.log("🟢 HotelDashboard: Rendering dashboard content");
-
-  const [activeMenuItem, setActiveMenuItem] = useState("overview");
+const [activeMenuItem, setActiveMenuItem] = useState("overview");
   const { menuItems } = useFilteredMenuItems();
   const { data: hotelInfo } = useCurrentUserHotel();
-
-  console.log(
-    "🟢 HotelDashboard: Menu items:",
-    menuItems.length,
-    "Active:",
-    activeMenuItem
-  );
-
-  // Real-time subscriptions are now handled by individual module hooks
+// Real-time subscriptions are now handled by individual module hooks
   // Each module (staff, chat, guests, etc.) has its own real-time subscription
 
   // If current active menu item is hidden, redirect to overview

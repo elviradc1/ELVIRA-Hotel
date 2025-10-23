@@ -15,8 +15,7 @@ export function useTaskAssignment(hotelId?: string) {
     queryKey: queryKeys.tasksByHotel(hotelId || ""),
     queryFn: async () => {
       if (!hotelId) {
-        console.log("❌ No hotel ID provided to useTaskAssignment");
-        return [];
+return [];
       }
 
       const { data, error } = await supabase
@@ -41,8 +40,7 @@ export function useTaskAssignment(hotelId?: string) {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("❌ Tasks query error:", error);
-        throw error;
+throw error;
       }
 
       return data;
@@ -72,15 +70,7 @@ export function useTaskAssignment(hotelId?: string) {
  */
 export function useCurrentHotelTasks() {
   const { hotelId, isLoading: hotelIdLoading } = useCurrentUserHotelId();
-
-  console.log("🏨 useCurrentHotelTasks Debug:", {
-    hotelId,
-    hotelIdLoading,
-    enabled: !!hotelId,
-    timestamp: new Date().toISOString(),
-  });
-
-  return useTaskAssignment(hotelId || undefined);
+return useTaskAssignment(hotelId || undefined);
 }
 
 /**
@@ -101,9 +91,7 @@ export function useCreateTask() {
       due_date?: string;
       due_time?: string;
     }) => {
-      console.log("📝 Creating task:", taskData);
-
-      if (!hotelId) {
+if (!hotelId) {
         throw new Error("No hotel ID available");
       }
 
@@ -134,27 +122,18 @@ export function useCreateTask() {
         .single();
 
       if (error) {
-        console.error("❌ Create task error:", error);
-        throw error;
+throw error;
       }
-
-      console.log("✅ Task created successfully:", data);
-
-      // 📧 Trigger email notification edge function
+// 📧 Trigger email notification edge function
       if (data.staff_id) {
-        console.log("📧 Triggering task notification email for task:", data.id);
-        try {
+try {
           const {
             data: { session },
           } = await supabase.auth.getSession();
 
           if (!session?.access_token) {
-            console.warn(
-              "⚠️ No session token available, skipping email notification"
-            );
-          } else {
-            console.log("📧 Calling edge function with taskId:", data.id);
-            const response = await supabase.functions.invoke(
+} else {
+const response = await supabase.functions.invoke(
               "send-task-notifications-email",
               {
                 body: { taskId: data.id },
@@ -163,26 +142,16 @@ export function useCreateTask() {
                 },
               }
             );
-
-            console.log("📧 Edge function response:", response);
-
-            if (response.error) {
-              console.error("❌ Email notification failed:", response.error);
-              // Don't throw - email failure shouldn't fail task creation
+if (response.error) {
+// Don't throw - email failure shouldn't fail task creation
             } else {
-              console.log(
-                "✅ Email notification sent successfully:",
-                response.data
-              );
-            }
+}
           }
         } catch (emailError) {
-          console.error("❌ Error sending email notification:", emailError);
-          // Don't throw - email failure shouldn't fail task creation
+// Don't throw - email failure shouldn't fail task creation
         }
       } else {
-        console.log("ℹ️ No staff assigned, skipping email notification");
-      }
+}
 
       return data;
     },
@@ -218,9 +187,7 @@ export function useUpdateTask() {
         due_time: string;
       }>;
     }) => {
-      console.log("📝 Updating task:", taskId, updates);
-
-      const { data, error } = await supabase
+const { data, error } = await supabase
         .from("tasks")
         .update({
           ...updates,
@@ -246,12 +213,9 @@ export function useUpdateTask() {
         .single();
 
       if (error) {
-        console.error("❌ Update task error:", error);
-        throw error;
+throw error;
       }
-
-      console.log("✅ Task updated successfully:", data);
-      return data;
+return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -270,17 +234,12 @@ export function useDeleteTask() {
 
   return useMutation({
     mutationFn: async (taskId: string) => {
-      console.log("🗑️ Deleting task:", taskId);
-
-      const { error } = await supabase.from("tasks").delete().eq("id", taskId);
+const { error } = await supabase.from("tasks").delete().eq("id", taskId);
 
       if (error) {
-        console.error("❌ Delete task error:", error);
-        throw error;
+throw error;
       }
-
-      console.log("✅ Task deleted successfully");
-      return taskId;
+return taskId;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

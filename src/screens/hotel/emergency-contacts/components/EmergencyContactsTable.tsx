@@ -135,8 +135,7 @@ export function EmergencyContactsTable({
       setIsDetailModalOpen(false);
       setSelectedContact(null);
     } catch (error) {
-      console.error("Error deleting emergency contact:", error);
-    }
+}
   };
 
   // Transform database data to table format with search filtering

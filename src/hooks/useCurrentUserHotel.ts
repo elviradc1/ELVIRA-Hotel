@@ -8,29 +8,13 @@ import { useAuth } from "./useAuth";
  */
 export function useCurrentUserHotel() {
   const { user, loading: authLoading } = useAuth();
-
-  console.log("🔵 useCurrentUserHotel: Hook called", {
-    userId: user?.id,
-    userRole: user?.role,
-    authLoading,
-  });
-
-  return useQuery({
+return useQuery({
     queryKey: ["current-user-hotel", user?.id],
     queryFn: async () => {
-      console.log(
-        "🔵 useCurrentUserHotel: queryFn executing for user:",
-        user?.id
-      );
-
-      if (!user?.id) {
-        console.log("🔵 useCurrentUserHotel: No user ID, returning null");
-        return null;
+if (!user?.id) {
+return null;
       }
-
-      console.log("🔵 useCurrentUserHotel: Fetching staff record...");
-
-      // First get the staff record to find the hotel_id and personal data
+// First get the staff record to find the hotel_id and personal data
       const { data: staffRecord, error: staffError } = await supabase
         .from("hotel_staff")
         .select(
@@ -40,29 +24,14 @@ export function useCurrentUserHotel() {
         )
         .eq("id", user.id)
         .single();
-
-      console.log("🔵 useCurrentUserHotel: Query result:", {
-        hasData: !!staffRecord,
-        error: staffError,
-        hotelId: staffRecord?.hotel_id,
-      });
-
-      if (staffError) {
-        console.error(
-          "🔴 useCurrentUserHotel: Error fetching user hotel:",
-          staffError
-        );
-        throw staffError;
+if (staffError) {
+throw staffError;
       }
 
       if (!staffRecord) {
-        console.log("🔵 useCurrentUserHotel: No staff record found");
-        return null;
+return null;
       }
-
-      console.log("🟢 useCurrentUserHotel: Successfully fetched hotel info");
-
-      // Get personal data (might be array, so take first element)
+// Get personal data (might be array, so take first element)
       const personalData = Array.isArray(staffRecord.hotel_staff_personal_data)
         ? staffRecord.hotel_staff_personal_data[0]
         : staffRecord.hotel_staff_personal_data;

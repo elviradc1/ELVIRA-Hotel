@@ -131,8 +131,7 @@ export function AnnouncementsTable({
       setIsDetailModalOpen(false);
       setSelectedAnnouncement(null);
     } catch (error) {
-      console.error("Error deleting announcement:", error);
-    }
+}
   };
 
   // Transform database data to table format with search filtering

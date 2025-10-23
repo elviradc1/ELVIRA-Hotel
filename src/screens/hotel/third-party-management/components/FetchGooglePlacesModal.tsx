@@ -51,8 +51,7 @@ export function FetchGooglePlacesModal({
 
       onClose();
     } catch (error) {
-      console.error("Error fetching places:", error);
-      alert(
+alert(
         `Error: ${error instanceof Error ? error.message : "Unknown error"}`
       );
     }

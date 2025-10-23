@@ -101,8 +101,7 @@ export function QnATable({ searchValue, onEdit }: QnATableProps) {
       setIsDetailModalOpen(false);
       setSelectedQA(null);
     } catch (error) {
-      console.error("Error deleting Q&A:", error);
-    }
+}
   };
 
   // Transform and filter Q&A data

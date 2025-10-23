@@ -113,8 +113,7 @@ export function AddQAModal({
     if (!validateForm()) return;
 
     if (!hotelId || !user?.id) {
-      console.error("Hotel ID or User ID is missing");
-      return;
+return;
     }
 
     try {
@@ -152,8 +151,7 @@ export function AddQAModal({
       setErrors({ question: "", answer: "", category: "", type: "" });
       onClose();
     } catch (error) {
-      console.error("Error saving Q&A:", error);
-    }
+}
   };
 
   const handleClose = () => {

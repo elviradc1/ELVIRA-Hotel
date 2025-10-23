@@ -40,8 +40,7 @@ export function useGroupDetails(conversationId: string | null | undefined) {
         .single();
 
       if (convError) {
-        console.error("Error fetching conversation:", convError);
-        throw convError;
+throw convError;
       }
 
       if (!conversation) return null;
@@ -66,8 +65,7 @@ export function useGroupDetails(conversationId: string | null | undefined) {
         .eq("conversation_id", conversationId);
 
       if (participantsError) {
-        console.error("Error fetching participants:", participantsError);
-        throw participantsError;
+throw participantsError;
       }
 
       return {

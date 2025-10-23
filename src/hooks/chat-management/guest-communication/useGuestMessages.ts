@@ -37,16 +37,8 @@ export function useGuestMessages(conversationId?: string) {
         .order("created_at", { ascending: true });
 
       if (error) {
-        console.error("❌ [useGuestMessages] Query error:", error);
         throw error;
       }
-
-      console.log(
-        "✅ [useGuestMessages] Loaded",
-        data?.length || 0,
-        "messages for conversation:",
-        conversationId
-      );
       return data || [];
     },
     enabled: !!conversationId,
@@ -100,12 +92,6 @@ export function useSendGuestMessage() {
       if (!currentUserHotel?.hotelId) {
         throw new Error("No hotel ID available");
       }
-
-      console.log(
-        "📤 [useSendGuestMessage] Sending message to conversation:",
-        conversationId
-      );
-
       // Get conversation to find guest_id
       const { data: conversation, error: convError } = await supabase
         .from("guest_conversation")
@@ -132,10 +118,6 @@ export function useSendGuestMessage() {
         .single();
 
       if (error) {
-        console.error(
-          "❌ [useSendGuestMessage] Failed to send message:",
-          error
-        );
         throw error;
       }
 
@@ -146,12 +128,9 @@ export function useSendGuestMessage() {
         .eq("id", conversationId);
 
       if (updateError) {
-        console.warn(
-          "⚠️ [useSendGuestMessage] Failed to update conversation timestamp"
-        );
+        console.error("Failed to update conversation timestamp:", updateError);
       }
 
-      console.log("✅ [useSendGuestMessage] Message sent successfully");
       return data;
     },
     onSuccess: (data) => {
@@ -164,8 +143,8 @@ export function useSendGuestMessage() {
         queryKey: queryKeys.guestConversations(currentUserHotel?.hotelId || ""),
       });
     },
-    onError: (error) => {
-      console.error("❌ [useSendGuestMessage] Error:", error);
+    onError: () => {
+      // Error handled by React Query
     },
   });
 }
@@ -188,27 +167,14 @@ export function useMarkGuestMessagesAsRead() {
       if (messageIds.length === 0) {
         return { conversationId };
       }
-
-      console.log(
-        "👁️ [useMarkGuestMessagesAsRead] Marking",
-        messageIds.length,
-        "messages as read"
-      );
-
       const { error } = await supabase
         .from("guest_messages")
         .update({ is_read: true })
         .in("id", messageIds);
 
       if (error) {
-        console.error(
-          "❌ [useMarkGuestMessagesAsRead] Failed to mark messages as read:",
-          error
-        );
         throw error;
       }
-
-      console.log("✅ [useMarkGuestMessagesAsRead] Messages marked as read");
       return { conversationId };
     },
     onSuccess: ({ conversationId }) => {

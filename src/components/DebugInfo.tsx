@@ -24,23 +24,7 @@ export function DebugInfo() {
   } = useStaffManagement();
 
   // Log current values for debugging
-  console.log("🎯 DebugInfo Component Values:", {
-    authLoading,
-    user,
-    userHotel,
-    hotelId,
-    staffData,
-    localStorage: {
-      supabaseKeys: Object.keys(localStorage).filter((k) =>
-        k.includes("supabase")
-      ),
-      authToken: localStorage.getItem("supabase.auth.token")
-        ? "Present"
-        : "Missing",
-    },
-  });
-
-  return (
+return (
     <div className="fixed top-4 right-4 bg-white border border-gray-300 p-4 rounded-lg shadow-lg max-w-md z-50">
       <h3 className="font-bold text-lg mb-3">🔍 Debug Info</h3>
 

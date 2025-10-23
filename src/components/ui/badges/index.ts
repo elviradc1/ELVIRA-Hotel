@@ -1,2 +1,2 @@
-export { StatusBadge } from "./StatusBadge";
+export { StatusBadge } from "./status/StatusBadge";
 export { Badge } from "./Badge";

@@ -23,7 +23,7 @@ export function useStaffMessages(conversationId?: string) {
           id,
           conversation_id,
           sender_id,
-          message,
+          content,
           created_at,
           sender:hotel_staff!staff_messages_sender_id_fkey (
             id,
@@ -38,16 +38,8 @@ export function useStaffMessages(conversationId?: string) {
         .order("created_at", { ascending: true });
 
       if (error) {
-        console.error("❌ [useStaffMessages] Query error:", error);
         throw error;
       }
-
-      console.log(
-        "✅ [useStaffMessages] Loaded",
-        data?.length || 0,
-        "messages for conversation:",
-        conversationId
-      );
       return data || [];
     },
     enabled: !!conversationId,
@@ -96,26 +88,20 @@ export function useSendStaffMessage() {
       if (!message || !message.trim()) {
         throw new Error("Message cannot be empty");
       }
-
-      console.log(
-        "� [useSendStaffMessage] Sending message to conversation:",
-        conversationId
-      );
-
       // Insert message
       const { data, error } = await supabase
         .from("staff_messages")
         .insert({
           conversation_id: conversationId,
           sender_id: user.id,
-          message: message.trim(),
+          content: message.trim(),
         })
         .select(
           `
           id,
           conversation_id,
           sender_id,
-          message,
+          content,
           created_at,
           sender:hotel_staff!staff_messages_sender_id_fkey (
             id,
@@ -129,10 +115,6 @@ export function useSendStaffMessage() {
         .single();
 
       if (error) {
-        console.error(
-          "❌ [useSendStaffMessage] Failed to send message:",
-          error
-        );
         throw error;
       }
 
@@ -143,12 +125,9 @@ export function useSendStaffMessage() {
         .eq("id", conversationId);
 
       if (updateError) {
-        console.warn(
-          "⚠️ [useSendStaffMessage] Failed to update conversation timestamp"
-        );
+        console.error("Failed to update conversation timestamp:", updateError);
       }
 
-      console.log("✅ [useSendStaffMessage] Message sent successfully");
       return data;
     },
     onSuccess: (data) => {
@@ -161,8 +140,8 @@ export function useSendStaffMessage() {
         queryKey: queryKeys.staffConversations(user?.id || ""),
       });
     },
-    onError: (error) => {
-      console.error("❌ [useSendStaffMessage] Error:", error);
+    onError: () => {
+      // Error handled by React Query
     },
   });
 }

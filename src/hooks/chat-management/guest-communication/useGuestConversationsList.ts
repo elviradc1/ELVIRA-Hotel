@@ -30,120 +30,117 @@ export function useGuestConversationsList() {
         return [];
       }
 
-      // Get all conversations with guest info and last message
-      const { data: conversations, error: convError } = await supabase
-        .from("guest_conversation")
-        .select(
-          `
-          id,
-          guest_id,
-          last_message_at,
-          status,
-          guests (
+      // Optimized: Get all data in parallel instead of sequential
+      const [conversationsResult] = await Promise.all([
+        // Query 1: Get all conversations with guest info
+        supabase
+          .from("guest_conversation")
+          .select(
+            `
             id,
-            guest_name,
-            room_number
+            guest_id,
+            last_message_at,
+            status,
+            guests (
+              id,
+              guest_name,
+              room_number
+            )
+          `
           )
-        `
-        )
-        .eq("hotel_id", hotelId)
-        .order("last_message_at", { ascending: false });
+          .eq("hotel_id", hotelId)
+          .order("last_message_at", { ascending: false }),
+      ]);
+
+      const { data: conversations, error: convError } = conversationsResult;
 
       if (convError) {
-        console.error("❌ [useGuestConversationsList] Query error:", convError);
-        throw convError;
+throw convError;
       }
 
       if (!conversations || conversations.length === 0) {
         return [];
       }
 
-      // Get last message for each conversation
-      const conversationIds = conversations.map((c) => c.id);
-      const { data: lastMessages, error: msgError } = await supabase
-        .from("guest_messages")
-        .select("conversation_id, message_text, created_at")
-        .in("conversation_id", conversationIds)
-        .order("created_at", { ascending: false });
+      // Now get messages and unread counts in parallel
+      const conversationIdsArray = conversations.map((c) => c.id);
+
+      const [lastMessagesResult, unreadCountsResultActual] = await Promise.all([
+        supabase
+          .from("guest_messages")
+          .select("conversation_id, message_text, created_at")
+          .in("conversation_id", conversationIdsArray)
+          .order("created_at", { ascending: false }),
+
+        supabase
+          .from("guest_messages")
+          .select("conversation_id, id")
+          .in("conversation_id", conversationIdsArray)
+          .eq("sender_type", "guest")
+          .eq("is_read", false),
+      ]);
+
+      const { data: lastMessages, error: msgError } = lastMessagesResult;
+      const { data: unreadCounts } = unreadCountsResultActual;
 
       if (msgError) {
-        console.error(
-          "❌ [useGuestConversationsList] Messages query error:",
-          msgError
-        );
-      }
+}
 
-      // Get unread counts for each conversation (only guest messages not read by staff)
-      const { data: unreadCounts } = await supabase
-        .from("guest_messages")
-        .select("conversation_id, id")
-        .in("conversation_id", conversationIds)
-        .eq("sender_type", "guest")
-        .eq("is_read", false);
-
-      // Map last messages to conversations
+      // Map last messages to conversations (optimized with single pass)
       const lastMessageMap = new Map<
         string,
         { message_text: string; created_at: string }
       >();
       if (lastMessages) {
-        lastMessages.forEach((msg) => {
+        for (const msg of lastMessages) {
           if (!lastMessageMap.has(msg.conversation_id)) {
             lastMessageMap.set(msg.conversation_id, {
               message_text: msg.message_text,
               created_at: msg.created_at,
             });
           }
-        });
+        }
       }
 
-      // Count unread messages per conversation
+      // Count unread messages per conversation (optimized with single pass)
       const unreadCountMap = new Map<string, number>();
       if (unreadCounts) {
-        unreadCounts.forEach((msg) => {
+        for (const msg of unreadCounts) {
           unreadCountMap.set(
             msg.conversation_id,
             (unreadCountMap.get(msg.conversation_id) || 0) + 1
           );
-        });
+        }
       }
 
-      // Format conversations
-      const formattedConversations: GuestConversationListItem[] = conversations
-        .map((conv) => {
-          const lastMsg = lastMessageMap.get(conv.id);
-          const guest = conv.guests as {
-            id: string;
-            guest_name: string;
-            room_number: string | null;
-          } | null;
+      // Format conversations (optimized to avoid filter)
+      const formattedConversations: GuestConversationListItem[] = [];
 
-          if (!guest) {
-            return null;
-          }
+      for (const conv of conversations) {
+        const guest = conv.guests as {
+          id: string;
+          guest_name: string;
+          room_number: string | null;
+        } | null;
 
-          return {
-            id: conv.id,
-            guestId: conv.guest_id,
-            guestName: guest.guest_name,
-            roomNumber: guest.room_number,
-            lastMessage: lastMsg?.message_text || "",
-            lastMessageTime: new Date(
-              lastMsg?.created_at || conv.last_message_at
-            ),
-            unreadCount: unreadCountMap.get(conv.id) || 0,
-            status: conv.status,
-          };
-        })
-        .filter((c): c is GuestConversationListItem => c !== null);
+        if (!guest) continue;
 
-      console.log(
-        "✅ [useGuestConversationsList] Loaded",
-        formattedConversations.length,
-        "conversations"
-      );
+        const lastMsg = lastMessageMap.get(conv.id);
 
-      return formattedConversations;
+        formattedConversations.push({
+          id: conv.id,
+          guestId: conv.guest_id,
+          guestName: guest.guest_name,
+          roomNumber: guest.room_number,
+          lastMessage: lastMsg?.message_text || "",
+          lastMessageTime: new Date(
+            lastMsg?.created_at || conv.last_message_at
+          ),
+          unreadCount: unreadCountMap.get(conv.id) || 0,
+          status: conv.status,
+        });
+      }
+return formattedConversations;
     },
     enabled: !!hotelId,
     config: {

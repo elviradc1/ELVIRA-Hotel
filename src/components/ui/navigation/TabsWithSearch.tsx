@@ -63,13 +63,12 @@ export function TabsWithSearch({
                   activeTab === tab.id
                     ? colors.text.primary
                     : colors.text.secondary,
-                borderBottom: `2px solid ${
-                  activeTab === tab.id ? colors.primary[500] : "transparent"
-                }`,
                 background: "none",
                 border: "none",
                 borderBottomWidth: "2px",
                 borderBottomStyle: "solid",
+                borderBottomColor:
+                  activeTab === tab.id ? colors.primary[500] : "transparent",
                 cursor: "pointer",
               }}
               onMouseEnter={(e) => {

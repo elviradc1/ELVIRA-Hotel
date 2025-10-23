@@ -30,17 +30,9 @@ export function useRealtimeSubscription({
 
   useEffect(() => {
     if (!enabled) {
-      console.log(`⏸️ Realtime subscription DISABLED for table: ${table}`);
-      return;
+return;
     }
-
-    console.log(`🔌 Setting up realtime subscription for table: ${table}`, {
-      filter,
-      queryKey,
-      timestamp: new Date().toISOString(),
-    });
-
-    let channel: RealtimeChannel;
+let channel: RealtimeChannel;
 
     const setupSubscription = () => {
       channel = supabase
@@ -54,12 +46,7 @@ export function useRealtimeSubscription({
             filter,
           },
           (payload) => {
-            console.log(`📡 Realtime event received for ${table}:`, {
-              event: payload.eventType,
-              timestamp: new Date().toISOString(),
-            });
-
-            // Call custom handlers
+// Call custom handlers
             if (payload.eventType === "INSERT" && onInsert) {
               onInsert(payload.new);
             } else if (payload.eventType === "UPDATE" && onUpdate) {
@@ -69,20 +56,17 @@ export function useRealtimeSubscription({
             }
 
             // Invalidate the query to refetch data
-            console.log(`🔄 Invalidating query:`, queryKey);
-            queryClient.invalidateQueries({ queryKey });
+queryClient.invalidateQueries({ queryKey });
           }
         )
         .subscribe((status) => {
-          console.log(`📡 Realtime subscription status for ${table}:`, status);
-        });
+});
     };
 
     setupSubscription();
 
     return () => {
-      console.log(`🔌 Cleaning up realtime subscription for table: ${table}`);
-      if (channel) {
+if (channel) {
         supabase.removeChannel(channel);
       }
     };

@@ -34,8 +34,7 @@ export function useStaffConversations() {
         .eq("staff_id", user.id);
 
       if (error) {
-        console.error("❌ [useStaffConversations] Query error:", error);
-        throw error;
+throw error;
       }
 
       return data || [];
@@ -85,19 +84,11 @@ export function useGetOrCreateStaffConversation() {
 
       // If conversation exists, return it immediately
       if (!rpcError && rpcResult && rpcResult.length > 0) {
-        console.log(
-          "✅ [useGetOrCreateStaffConversation] Found existing conversation:",
-          rpcResult[0].id
-        );
-        return rpcResult[0];
+return rpcResult[0];
       }
 
       // No existing conversation - create new one
-      console.log(
-        "📝 [useGetOrCreateStaffConversation] Creating new conversation"
-      );
-
-      // Get hotel_id from query cache or fetch it
+// Get hotel_id from query cache or fetch it
       const cachedStaff = queryClient.getQueryData<any[]>([
         "currentHotelStaffList",
       ]);
@@ -149,19 +140,10 @@ export function useGetOrCreateStaffConversation() {
           .eq("id", newConversation.id);
         throw addParticipantsError;
       }
-
-      console.log(
-        "✅ [useGetOrCreateStaffConversation] New conversation created:",
-        newConversation.id
-      );
-      return newConversation;
+return newConversation;
     },
     onSuccess: (data) => {
-      console.log(
-        "🔄 [useGetOrCreateStaffConversation] Invalidating caches for conversation:",
-        data.id
-      );
-      // Invalidate conversations list
+// Invalidate conversations list
       queryClient.invalidateQueries({
         queryKey: queryKeys.staffConversations(user?.id || ""),
       });

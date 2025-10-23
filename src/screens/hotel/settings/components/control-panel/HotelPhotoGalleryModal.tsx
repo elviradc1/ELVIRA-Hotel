@@ -32,11 +32,7 @@ export function HotelPhotoGalleryModal({
       );
 
       if (validImages.length !== initialImages?.length) {
-        console.log(
-          `⚠️ Filtered out ${
-            (initialImages?.length || 0) - validImages.length
-          } invalid image(s)`
-        );
+        console.warn("Some invalid image URLs were filtered out");
       }
 
       setImages(validImages);
@@ -46,32 +42,21 @@ export function HotelPhotoGalleryModal({
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    console.log("🔵 [Photo Upload] handleFileSelect started");
     const files = event.target.files;
 
     if (!files || files.length === 0) {
-      console.log("❌ [Photo Upload] No files selected");
       return;
     }
-
-    console.log(`📁 [Photo Upload] Selected ${files.length} file(s)`);
-
     const remainingSlots = MAX_IMAGES - images.length;
     if (remainingSlots <= 0) {
-      console.log("❌ [Photo Upload] Maximum photos reached");
       alert("Maximum 8 photos allowed");
       return;
     }
 
     if (!hotelId) {
-      console.log("❌ [Photo Upload] Hotel ID not found");
       alert("Hotel ID not found");
       return;
     }
-
-    console.log(`🏨 [Photo Upload] Hotel ID: ${hotelId}`);
-    console.log(`🗂️ [Photo Upload] Bucket: ${BUCKET_NAME}`);
-
     setIsUploading(true);
 
     try {
@@ -79,13 +64,8 @@ export function HotelPhotoGalleryModal({
       const filesToProcess = Array.from(files).slice(0, remainingSlots);
 
       for (const file of filesToProcess) {
-        console.log(`\n📸 [Photo Upload] Processing: ${file.name}`);
-        console.log(`   - Type: ${file.type}`);
-        console.log(`   - Size: ${(file.size / 1024).toFixed(2)} KB`);
-
         // Validate file type
         if (!file.type.match(/^image\/(jpeg|jpg|png|webp|gif)$/)) {
-          console.log(`❌ [Photo Upload] Invalid file type: ${file.type}`);
           alert(
             `Invalid file type: ${file.name}. Please use JPG, PNG, WebP, or GIF.`
           );
@@ -94,7 +74,6 @@ export function HotelPhotoGalleryModal({
 
         // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
-          console.log(`❌ [Photo Upload] File too large: ${file.size} bytes`);
           alert(`File too large: ${file.name}. Maximum size is 5MB.`);
           continue;
         }
@@ -104,9 +83,6 @@ export function HotelPhotoGalleryModal({
         const fileName = `hotel-gallery/${hotelId}/${Date.now()}-${Math.random()
           .toString(36)
           .substring(7)}.${fileExt}`;
-
-        console.log(`📤 [Photo Upload] Uploading to: ${fileName}`);
-
         const { data, error } = await supabase.storage
           .from(BUCKET_NAME)
           .upload(fileName, file, {
@@ -115,10 +91,6 @@ export function HotelPhotoGalleryModal({
           });
 
         if (error) {
-          console.error("❌ [Photo Upload] Upload error:", error);
-          console.error("   - Message:", error.message);
-          console.error("   - Error object:", JSON.stringify(error, null, 2));
-
           // Check if bucket doesn't exist
           if (error.message.includes("Bucket not found")) {
             alert(
@@ -136,37 +108,21 @@ export function HotelPhotoGalleryModal({
           alert(`Failed to upload ${file.name}: ${error.message}`);
           continue;
         }
-
-        console.log("✅ [Photo Upload] Upload successful:", data);
-        console.log("   - Path:", data.path);
-        console.log("   - Full path:", data.fullPath);
-
         // Get public URL
         const {
           data: { publicUrl },
         } = supabase.storage.from(BUCKET_NAME).getPublicUrl(data.path);
-
-        console.log("🔗 [Photo Upload] Public URL:", publicUrl);
-
         newImageUrls.push(publicUrl);
       }
-
-      console.log(
-        `✅ [Photo Upload] Successfully uploaded ${newImageUrls.length} image(s)`
-      );
-      console.log("📋 [Photo Upload] URLs:", newImageUrls);
-
       if (newImageUrls.length > 0) {
         setImages((prev) => [...prev, ...newImageUrls]);
       }
-    } catch (error) {
-      console.error("❌ [Photo Upload] Unexpected error:", error);
+    } catch {
       alert("An error occurred while uploading images");
     } finally {
       setIsUploading(false);
       // Reset input
       event.target.value = "";
-      console.log("🏁 [Photo Upload] Process completed\n");
     }
   };
 
@@ -189,11 +145,11 @@ export function HotelPhotoGalleryModal({
           .remove([filePath]);
 
         if (error) {
-          console.error("Error deleting file from storage:", error);
+          console.error("Error deleting image from storage:", error);
         }
       }
     } catch (error) {
-      console.error("Error removing image:", error);
+      console.error("Failed to remove image:", error);
     }
   };
 
@@ -203,7 +159,8 @@ export function HotelPhotoGalleryModal({
       await onSave(images);
       onClose();
     } catch (error) {
-      console.error("Error saving photos:", error);
+      console.error("Failed to save images:", error);
+      alert("Failed to save images. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -283,16 +240,6 @@ export function HotelPhotoGalleryModal({
                 src={imageUrl}
                 alt={`Photo ${index + 1}`}
                 className="w-full h-full object-cover"
-                onLoad={() =>
-                  console.log(`✅ Image ${index + 1} loaded:`, imageUrl)
-                }
-                onError={(e) => {
-                  console.error(
-                    `❌ Image ${index + 1} failed to load:`,
-                    imageUrl
-                  );
-                  console.error("Error details:", e);
-                }}
               />
               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity flex items-center justify-center">
                 <button

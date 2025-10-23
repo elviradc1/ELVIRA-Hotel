@@ -64,8 +64,7 @@ export function GroupParticipantsModal({
       setRemovingId(participantId);
       await onRemoveParticipant(participantId);
     } catch (error) {
-      console.error("Error removing participant:", error);
-    } finally {
+} finally {
       setRemovingId(null);
     }
   };
@@ -75,8 +74,7 @@ export function GroupParticipantsModal({
       await onAddParticipants(staffIds);
       setIsAddingView(false);
     } catch (error) {
-      console.error("Error adding participants:", error);
-      throw error;
+throw error;
     }
   };
 

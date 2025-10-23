@@ -62,8 +62,7 @@ export function StaffConversationView({
     );
 
     if (cachedConversationId) {
-      console.log("⚡ Found conversation in cache:", cachedConversationId);
-      setConversationId(cachedConversationId);
+setConversationId(cachedConversationId);
       setIsInitializing(false);
       return;
     }
@@ -78,8 +77,7 @@ export function StaffConversationView({
         );
         setConversationId(conversation.id);
       } catch (error) {
-        console.error("Error getting/creating conversation:", error);
-      } finally {
+} finally {
         setIsInitializing(false);
       }
     };
@@ -110,8 +108,7 @@ export function StaffConversationView({
       });
       setMessageText("");
     } catch (error) {
-      console.error("Error sending message:", error);
-    }
+}
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

@@ -107,8 +107,7 @@ export function useAmenityForm(
     if (!validateForm()) return;
 
     if (!hotelId || !user?.id) {
-      console.error("Hotel ID or User ID is missing");
-      return;
+return;
     }
 
     try {
@@ -141,11 +140,7 @@ export function useAmenityForm(
       resetForm();
       onSuccess();
     } catch (error) {
-      console.error(
-        `Error ${isEditMode ? "updating" : "creating"} amenity:`,
-        error
-      );
-    }
+}
   };
 
   const resetForm = () => {

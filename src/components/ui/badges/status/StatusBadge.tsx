@@ -21,8 +21,7 @@ export function StatusBadge({
       const newStatus = status === "inactive";
       await onToggle(newStatus);
     } catch (error) {
-      console.error("Failed to update status:", error);
-    } finally {
+} finally {
       setIsUpdating(false);
     }
   };

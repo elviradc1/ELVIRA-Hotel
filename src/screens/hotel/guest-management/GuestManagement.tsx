@@ -183,8 +183,7 @@ export function GuestManagement({
         buttonLabel="Add Guest"
         onButtonClick={() => {
           // TODO: Open add guest modal
-          console.log("Add Guest clicked");
-        }}
+}}
       />
 
       {/* Guest Management Table */}

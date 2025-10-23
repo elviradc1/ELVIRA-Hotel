@@ -90,8 +90,7 @@ export function RestaurantsTable({
       setIsDeleteConfirmOpen(false);
       setRestaurantToDelete(null);
     } catch (error) {
-      console.error("Error deleting restaurant:", error);
-    }
+}
   };
 
   // Define table columns for restaurants

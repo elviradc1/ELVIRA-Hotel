@@ -91,31 +91,20 @@ export function GuestCommunication() {
 
   const handleSendMessage = async (content: string) => {
     if (!conversationId) {
-      console.warn(
-        "⚠️ [GuestCommunication] Cannot send message: No conversation ID"
-      );
-      return;
+return;
     }
-
-    console.log(
-      "📤 [GuestCommunication] Sending message to conversation:",
-      conversationId
-    );
-    try {
+try {
       await sendMessage.mutateAsync({
         conversationId,
         message: content,
       });
-      console.log("✅ [GuestCommunication] Message sent successfully");
-    } catch (error) {
-      console.error("❌ [GuestCommunication] Error sending message:", error);
-    }
+} catch (error) {
+}
   };
 
   // Handle filter button click
   const handleFilterClick = () => {
-    console.log("Filter guest conversations");
-    // TODO: Implement filter functionality
+// TODO: Implement filter functionality
   };
 
   return (
