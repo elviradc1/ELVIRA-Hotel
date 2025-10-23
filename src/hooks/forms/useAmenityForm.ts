@@ -23,6 +23,7 @@ interface FormErrors {
   price: string;
   category: string;
   description: string;
+  [key: string]: string | undefined;
 }
 
 const initialFormData: FormData = {
@@ -107,7 +108,7 @@ export function useAmenityForm(
     if (!validateForm()) return;
 
     if (!hotelId || !user?.id) {
-return;
+      return;
     }
 
     try {
@@ -139,8 +140,7 @@ return;
 
       resetForm();
       onSuccess();
-    } catch (error) {
-}
+    } catch (error) {}
   };
 
   const resetForm = () => {

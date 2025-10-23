@@ -12,8 +12,7 @@ import {
 } from "../../../../../hooks/amenities/amenities/useAmenities";
 import { useHotelId } from "../../../../../hooks/useHotelContext";
 import { usePagination } from "../../../../../hooks";
-import { AmenityDetailModal } from "./amenity-detail-modal";
-import { AddAmenityModal } from "./add-amenity-modal";
+import { AmenityModal } from "./amenity-modal";
 import { useItemTableModals } from "../../../../../components/shared/tables/useItemTableModals";
 import type { Database } from "../../../../../types/database";
 
@@ -79,8 +78,6 @@ export function AmenitiesTable({ searchValue }: AmenitiesTableProps) {
       openDetailModal(fullAmenity);
     }
   };
-
-  const handleCloseModal = closeDetailModal;
 
   // Edit and delete handlers are now provided by the hook
 
@@ -261,11 +258,15 @@ export function AmenitiesTable({ searchValue }: AmenitiesTableProps) {
         />
       </div>
 
-      {/* Detail Modal with Edit/Delete actions */}
-      <AmenityDetailModal
-        isOpen={isDetailModalOpen}
-        onClose={handleCloseModal}
-        amenity={selectedAmenity}
+      {/* Unified Amenity Modal - handles view, edit, and create */}
+      <AmenityModal
+        isOpen={isDetailModalOpen || isEditModalOpen}
+        onClose={() => {
+          closeDetailModal();
+          closeEditModal();
+        }}
+        amenity={selectedAmenity || amenityToEdit}
+        mode={isDetailModalOpen ? "view" : "edit"}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
@@ -280,13 +281,6 @@ export function AmenitiesTable({ searchValue }: AmenitiesTableProps) {
         onConfirm={confirmDelete}
         onClose={closeDeleteConfirm}
         loading={deleteAmenity.isPending}
-      />
-
-      {/* Edit Amenity Modal */}
-      <AddAmenityModal
-        isOpen={isEditModalOpen}
-        onClose={closeEditModal}
-        amenity={amenityToEdit}
       />
     </div>
   );

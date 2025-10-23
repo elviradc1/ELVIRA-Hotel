@@ -1,2 +1,3 @@
 export { AmenitiesTable } from "./AmenitiesTable";
-export { AddAmenityModal } from "./add-amenity-modal";
+export { AmenityModal } from "./amenity-modal";
+export type { AmenityModalProps } from "./amenity-modal";
