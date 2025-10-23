@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Modal, Button } from "../../../../../../components/ui";
 import { useCurrentUserHotelId } from "../../../../../../hooks/useCurrentUserHotel";
@@ -17,6 +17,8 @@ interface StaffData {
   position: string;
   department: string;
   status: string;
+  employee_id?: string;
+  hire_date?: string;
   hotel_staff_personal_data?: {
     first_name: string;
     last_name: string;
@@ -34,20 +36,35 @@ interface StaffFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   editData?: StaffData | null;
+  mode?: "create" | "edit" | "view";
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 export function StaffFormModal({
   isOpen,
   onClose,
   editData = null,
+  mode = "create",
+  onEdit,
+  onDelete,
 }: StaffFormModalProps) {
   const { hotelId } = useCurrentUserHotelId();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [internalMode, setInternalMode] = useState(mode);
 
   const { formData, setFormData, errors, validateForm, resetForm } =
     useStaffForm(editData);
+
+  // Update internal mode when prop changes
+  useEffect(() => {
+    setInternalMode(mode);
+  }, [mode]);
+
+  const isViewMode = internalMode === "view";
+  const isEditMode = internalMode === "edit";
 
   // Create staff mutation
   const createMutation = useMutation({
@@ -142,12 +159,54 @@ export function StaffFormModal({
   const handleClose = () => {
     resetForm();
     setSuccessMessage(null);
+    setInternalMode(mode);
     onClose();
   };
 
-  const isEditMode = !!editData;
+  const handleEditClick = () => {
+    if (onEdit) {
+      onEdit();
+    } else {
+      setInternalMode("edit");
+    }
+  };
+
+  const handleDeleteClick = () => {
+    if (onDelete) {
+      onDelete();
+    }
+  };
+
   const isPending =
     isSubmitting || createMutation.isPending || updateMutation.isPending;
+
+  // Get staff info for view mode
+  const personalData = editData?.hotel_staff_personal_data;
+  const fullName = personalData
+    ? `${personalData.first_name || ""} ${personalData.last_name || ""}`.trim()
+    : "N/A";
+
+  const formatDate = (dateString?: string | null) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const getStatusBadge = (status: string) => {
+    const colors = {
+      active: "bg-green-100 text-green-800",
+      inactive: "bg-yellow-100 text-yellow-800",
+      on_leave: "bg-red-100 text-red-800",
+    };
+    return (
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          colors[status as keyof typeof colors] || colors.active
+        }`}
+      >
+        {status.charAt(0).toUpperCase() + status.slice(1).replace("_", " ")}
+      </span>
+    );
+  };
 
   // Show success message modal
   if (successMessage) {
@@ -192,6 +251,181 @@ export function StaffFormModal({
     );
   }
 
+  // Render view mode
+  if (isViewMode && editData) {
+    return (
+      <Modal
+        isOpen={isOpen}
+        onClose={handleClose}
+        title="Staff Member Details"
+        size="lg"
+      >
+        <div className="space-y-4">
+          {/* Header Section */}
+          <div className="flex items-center justify-between pb-4 border-b border-gray-200">
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900">
+                {fullName}
+              </h3>
+              <p className="text-sm text-gray-500 mt-1">
+                {editData.employee_id || "N/A"}
+              </p>
+            </div>
+            {getStatusBadge(editData.status)}
+          </div>
+
+          {/* Basic Information */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-900 border-b border-gray-200 pb-2">
+              Basic Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  First Name
+                </label>
+                <p className="text-sm text-gray-900">
+                  {personalData?.first_name || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Name
+                </label>
+                <p className="text-sm text-gray-900">
+                  {personalData?.last_name || "N/A"}
+                </p>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
+              <p className="text-sm text-gray-900">
+                {personalData?.email || "N/A"}
+              </p>
+            </div>
+          </div>
+
+          {/* Employment Information */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-900 border-b border-gray-200 pb-2">
+              Employment Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Position
+                </label>
+                <p className="text-sm text-gray-900">{editData.position}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Department
+                </label>
+                <p className="text-sm text-gray-900">{editData.department}</p>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Hire Date
+              </label>
+              <p className="text-sm text-gray-900">
+                {formatDate(editData.hire_date)}
+              </p>
+            </div>
+          </div>
+
+          {/* Contact Information */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-900 border-b border-gray-200 pb-2">
+              Contact Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number
+                </label>
+                <p className="text-sm text-gray-900">
+                  {personalData?.phone_number || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date of Birth
+                </label>
+                <p className="text-sm text-gray-900">
+                  {formatDate(personalData?.date_of_birth)}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Address Information */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-900 border-b border-gray-200 pb-2">
+              Address Information
+            </h3>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Address
+              </label>
+              <p className="text-sm text-gray-900">
+                {personalData?.address || "N/A"}
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  City
+                </label>
+                <p className="text-sm text-gray-900">
+                  {personalData?.city || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Zip Code
+                </label>
+                <p className="text-sm text-gray-900">
+                  {personalData?.zip_code || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Country
+                </label>
+                <p className="text-sm text-gray-900">
+                  {personalData?.country || "N/A"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons - Sticky Footer */}
+          <div className="sticky bottom-0 bg-white flex justify-between pt-4 border-t border-gray-200 mt-6">
+            <Button
+              variant="secondary"
+              onClick={handleDeleteClick}
+              disabled={!onDelete}
+            >
+              Delete
+            </Button>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={handleClose}>
+                Close
+              </Button>
+              <Button variant="primary" onClick={handleEditClick}>
+                Edit
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+    );
+  }
+
+  // Render edit/create mode (form)
   return (
     <Modal
       isOpen={isOpen}
@@ -290,8 +524,8 @@ export function StaffFormModal({
           />
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+        {/* Action Buttons - Sticky Footer */}
+        <div className="sticky bottom-0 bg-white flex justify-end gap-3 pt-4 border-t border-gray-200 mt-6">
           <Button
             type="button"
             variant="outline"

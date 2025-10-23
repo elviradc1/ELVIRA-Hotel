@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Button } from "../../../../components/ui";
-import { StaffTable, StaffFormModal, StaffDetailModal } from "./components";
+import { Button, ConfirmationModal } from "../../../../components/ui";
+import { StaffTable } from "./components";
+import { StaffModal } from "./components/modals/staff-modal";
+import { useDeleteStaff } from "../../../../hooks/hotel-staff";
 
 interface StaffData {
   id: string;
@@ -30,6 +32,10 @@ export function StaffManagement({ searchValue }: StaffManagementProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<StaffData | null>(null);
+  const [modalMode, setModalMode] = useState<"view" | "edit">("view");
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
+  const deleteStaff = useDeleteStaff();
 
   const handleAddNew = () => {
     setIsAddModalOpen(true);
@@ -37,6 +43,7 @@ export function StaffManagement({ searchValue }: StaffManagementProps) {
 
   const handleRowClick = (staff: StaffData) => {
     setSelectedStaff(staff);
+    setModalMode("view");
     setIsDetailModalOpen(true);
   };
 
@@ -47,7 +54,33 @@ export function StaffManagement({ searchValue }: StaffManagementProps) {
   const handleCloseDetailModal = () => {
     setIsDetailModalOpen(false);
     setSelectedStaff(null);
+    setModalMode("view");
   };
+
+  const handleEdit = () => {
+    setModalMode("edit");
+  };
+
+  const handleDelete = () => {
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (selectedStaff) {
+      try {
+        await deleteStaff.mutateAsync(selectedStaff.id);
+        setIsDeleteConfirmOpen(false);
+        handleCloseDetailModal();
+      } catch (error) {
+        console.error("Error deleting staff:", error);
+      }
+    }
+  };
+
+  const personalData = selectedStaff?.hotel_staff_personal_data;
+  const fullName = personalData
+    ? `${personalData.first_name || ""} ${personalData.last_name || ""}`.trim()
+    : "N/A";
 
   return (
     <div className="p-6">
@@ -66,17 +99,33 @@ export function StaffManagement({ searchValue }: StaffManagementProps) {
       <StaffTable searchValue={searchValue} onRowClick={handleRowClick} />
 
       {/* Add New Staff Modal */}
-      <StaffFormModal
+      <StaffModal
         isOpen={isAddModalOpen}
         onClose={handleCloseAddModal}
-        editData={null}
+        mode="create"
       />
 
-      {/* Staff Detail Modal */}
-      <StaffDetailModal
+      {/* Staff Detail/Edit Modal */}
+      <StaffModal
         isOpen={isDetailModalOpen}
         onClose={handleCloseDetailModal}
         staff={selectedStaff}
+        mode={modalMode}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Staff Member"
+        message={`Are you sure you want to delete ${fullName}? This action cannot be undone and will remove the staff member from the system permanently.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        loading={deleteStaff.isPending}
       />
     </div>
   );

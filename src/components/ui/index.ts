@@ -7,6 +7,9 @@ export * from "./forms";
 // Modals
 export * from "./modals";
 
+// Modal Forms
+export * from "./modalform";
+
 // States
 export * from "./states";
 

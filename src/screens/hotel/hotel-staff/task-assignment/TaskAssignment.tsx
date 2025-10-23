@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Button } from "../../../../components/ui";
-import { TasksTable, TaskFormModal, TaskDetailModal } from "./components";
+import { Button, ConfirmationModal } from "../../../../components/ui";
+import { TasksTable } from "./components";
+import { TaskModal } from "./components/modals/task-modal";
+import { useDeleteTask } from "../../../../hooks/hotel-staff";
 import type { Database } from "../../../../types/database";
 
 type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
@@ -27,6 +29,10 @@ export function TaskAssignment({ searchValue }: TaskAssignmentProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskWithStaff | null>(null);
+  const [modalMode, setModalMode] = useState<"view" | "edit">("view");
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
+  const deleteTask = useDeleteTask();
 
   const handleAddNew = () => {
     setIsAddModalOpen(true);
@@ -34,6 +40,7 @@ export function TaskAssignment({ searchValue }: TaskAssignmentProps) {
 
   const handleRowClick = (task: TaskWithStaff) => {
     setSelectedTask(task);
+    setModalMode("view");
     setIsDetailModalOpen(true);
   };
 
@@ -44,6 +51,27 @@ export function TaskAssignment({ searchValue }: TaskAssignmentProps) {
   const handleCloseDetailModal = () => {
     setIsDetailModalOpen(false);
     setSelectedTask(null);
+    setModalMode("view");
+  };
+
+  const handleEdit = () => {
+    setModalMode("edit");
+  };
+
+  const handleDelete = () => {
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (selectedTask) {
+      try {
+        await deleteTask.mutateAsync(selectedTask.id);
+        setIsDeleteConfirmOpen(false);
+        handleCloseDetailModal();
+      } catch (error) {
+        console.error("Error deleting task:", error);
+      }
+    }
   };
 
   return (
@@ -61,17 +89,33 @@ export function TaskAssignment({ searchValue }: TaskAssignmentProps) {
       <TasksTable searchValue={searchValue} onRowClick={handleRowClick} />
 
       {/* Add New Task Modal */}
-      <TaskFormModal
+      <TaskModal
         isOpen={isAddModalOpen}
         onClose={handleCloseAddModal}
-        editData={null}
+        mode="create"
       />
 
-      {/* Task Detail Modal */}
-      <TaskDetailModal
+      {/* Task Detail/Edit Modal */}
+      <TaskModal
         isOpen={isDetailModalOpen}
         onClose={handleCloseDetailModal}
         task={selectedTask}
+        mode={modalMode}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Task"
+        message="Are you sure you want to delete this task? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        loading={deleteTask.isPending}
       />
     </div>
   );

@@ -17,6 +17,7 @@ export interface TaskFormData {
 export interface TaskFormErrors {
   title?: string;
   priority?: string;
+  [key: string]: string | undefined;
 }
 
 export function useTaskForm(editData: TaskRow | null) {
