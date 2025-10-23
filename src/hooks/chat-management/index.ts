@@ -17,3 +17,6 @@ export {
   useDeleteMessage,
   useUnreadMessagesCount,
 } from "./useMessages";
+
+// Staff Communication
+export * from "./staff-communication";

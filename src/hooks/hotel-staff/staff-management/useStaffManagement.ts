@@ -1,3 +1,4 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../../../services/supabase";
 import { queryKeys } from "../../../lib/react-query";
 import { useCurrentUserHotelId } from "../../useCurrentUserHotel";
@@ -26,7 +27,7 @@ export function useStaffManagement(hotelId?: string) {
         `
         )
         .eq("hotel_id", hotelId)
-        .eq("status", "active")
+
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -70,4 +71,54 @@ export function useCurrentHotelStaff() {
   });
 
   return useStaffManagement(hotelId || undefined);
+}
+
+/**
+ * Delete staff mutation using edge function
+ */
+export function useDeleteStaff() {
+  const queryClient = useQueryClient();
+  const { hotelId } = useCurrentUserHotelId();
+
+  return useMutation({
+    mutationFn: async (staffId: string) => {
+      console.log("🗑️ Deleting staff member:", staffId);
+
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session?.access_token) {
+          throw new Error("No session token available");
+        }
+
+        console.log("📧 Calling delete-staff-hotel edge function");
+        const response = await supabase.functions.invoke("delete-staff-hotel", {
+          body: { staffId },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+
+        console.log("📧 Edge function response:", response);
+
+        if (response.error) {
+          console.error("❌ Delete staff failed:", response.error);
+          throw new Error(response.error.message || "Failed to delete staff");
+        }
+
+        console.log("✅ Staff deleted successfully:", response.data);
+        return response.data;
+      } catch (error) {
+        console.error("❌ Error deleting staff:", error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.staffByHotel(hotelId || ""),
+      });
+    },
+  });
 }

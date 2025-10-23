@@ -1,6 +1,11 @@
 import { useState } from "react";
-import { Modal, Button } from "../../../../../../../components/ui";
+import {
+  Modal,
+  Button,
+  ConfirmationModal,
+} from "../../../../../../../components/ui";
 import { StaffFormModal } from "../StaffFormModal";
+import { useDeleteStaff } from "../../../../../../../hooks/hotel-staff";
 
 interface StaffData {
   id: string;
@@ -34,6 +39,8 @@ export function StaffDetailModal({
   staff,
 }: StaffDetailModalProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const deleteStaff = useDeleteStaff();
 
   if (!staff) return null;
 
@@ -44,6 +51,20 @@ export function StaffDetailModal({
 
   const handleEdit = () => {
     setIsEditModalOpen(true);
+  };
+
+  const handleDelete = () => {
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteStaff.mutateAsync(staff.id);
+      setIsDeleteConfirmOpen(false);
+      onClose();
+    } catch (error) {
+      console.error("Error deleting staff:", error);
+    }
   };
 
   const handleCloseEditModal = () => {
@@ -224,13 +245,18 @@ export function StaffDetailModal({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-            <Button variant="outline" onClick={onClose}>
-              Close
+          <div className="flex justify-between pt-4 border-t border-gray-200">
+            <Button variant="danger" onClick={handleDelete}>
+              Delete
             </Button>
-            <Button variant="primary" onClick={handleEdit}>
-              Edit
-            </Button>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={onClose}>
+                Close
+              </Button>
+              <Button variant="primary" onClick={handleEdit}>
+                Edit
+              </Button>
+            </div>
           </div>
         </div>
       </Modal>
@@ -240,6 +266,19 @@ export function StaffDetailModal({
         isOpen={isEditModalOpen}
         onClose={handleCloseEditModal}
         editData={staff}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Staff Member"
+        message={`Are you sure you want to delete ${fullName}? This action cannot be undone and will remove the staff member from the system permanently.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        loading={deleteStaff.isPending}
       />
     </>
   );

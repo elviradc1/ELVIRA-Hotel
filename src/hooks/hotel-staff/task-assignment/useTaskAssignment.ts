@@ -139,6 +139,51 @@ export function useCreateTask() {
       }
 
       console.log("✅ Task created successfully:", data);
+
+      // 📧 Trigger email notification edge function
+      if (data.staff_id) {
+        console.log("📧 Triggering task notification email for task:", data.id);
+        try {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+
+          if (!session?.access_token) {
+            console.warn(
+              "⚠️ No session token available, skipping email notification"
+            );
+          } else {
+            console.log("📧 Calling edge function with taskId:", data.id);
+            const response = await supabase.functions.invoke(
+              "send-task-notifications-email",
+              {
+                body: { taskId: data.id },
+                headers: {
+                  Authorization: `Bearer ${session.access_token}`,
+                },
+              }
+            );
+
+            console.log("📧 Edge function response:", response);
+
+            if (response.error) {
+              console.error("❌ Email notification failed:", response.error);
+              // Don't throw - email failure shouldn't fail task creation
+            } else {
+              console.log(
+                "✅ Email notification sent successfully:",
+                response.data
+              );
+            }
+          }
+        } catch (emailError) {
+          console.error("❌ Error sending email notification:", emailError);
+          // Don't throw - email failure shouldn't fail task creation
+        }
+      } else {
+        console.log("ℹ️ No staff assigned, skipping email notification");
+      }
+
       return data;
     },
     onSuccess: () => {

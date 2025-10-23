@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { ReactElement } from "react";
 import { sidebarColors } from "../utils/theme";
 
@@ -19,6 +18,7 @@ interface SidebarProps {
   onMenuItemChange?: (itemId: string) => void;
   collapsible?: boolean;
   hotelName?: string;
+  isCollapsed?: boolean;
 }
 
 export function Sidebar({
@@ -29,9 +29,8 @@ export function Sidebar({
   onMenuItemChange,
   collapsible = false,
   hotelName,
+  isCollapsed = false,
 }: SidebarProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
   // Get hotel initials from hotel name
   const getHotelInitials = (name?: string) => {
     if (!name) return user.role.substring(0, 2).toUpperCase();
@@ -58,53 +57,7 @@ export function Sidebar({
         position: "relative",
       }}
     >
-      {/* Collapse handle button - positioned on the right edge with fade effect */}
-      {collapsible && (
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="fixed top-4 transition-all duration-300"
-          style={{
-            left: isCollapsed ? "68px" : "244px",
-            zIndex: 9999,
-            width: "28px",
-            height: "56px",
-            background: sidebarColors.background,
-            backdropFilter: "blur(10px)",
-            borderRadius: "0 12px 12px 0",
-            border: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: "3px 0 12px rgba(0, 0, 0, 0.2)",
-            maskImage: "linear-gradient(to right, transparent 10%, black 40%)",
-            WebkitMaskImage:
-              "linear-gradient(to right, transparent 10%, black 40%)",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "scale(1.05)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "scale(1)";
-          }}
-        >
-          <svg
-            className="w-3 h-3"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            style={{ color: "white" }}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={3}
-              d={isCollapsed ? "M9 5l7 7-7 7" : "M15 19l-7-7 7-7"}
-            />
-          </svg>
-        </button>
-      )}
-
+      {/* Collapse button moved to Layout component */}
       <div
         className={`p-4 flex-1 overflow-y-auto ${
           isCollapsed ? "flex flex-col" : ""
