@@ -8,6 +8,7 @@ interface ChatHeaderProps {
   onVideoCall?: () => void;
   onPhoneCall?: () => void;
   onInfo?: () => void;
+  onAvatarClick?: () => void;
 }
 
 export function ChatHeader({
@@ -18,6 +19,7 @@ export function ChatHeader({
   onVideoCall,
   onPhoneCall,
   onInfo,
+  onAvatarClick,
 }: ChatHeaderProps) {
   const getStatusColor = (status?: string) => {
     switch (status) {
@@ -59,17 +61,27 @@ export function ChatHeader({
       <div className="flex items-center space-x-3">
         {/* Avatar with Status */}
         <div className="relative">
-          {participant.avatar ? (
-            <img
-              src={participant.avatar}
-              alt={participant.name}
-              className="w-10 h-10 rounded-full"
-            />
-          ) : (
-            <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-medium">
-              {participant.name.charAt(0).toUpperCase()}
-            </div>
-          )}
+          <button
+            onClick={onAvatarClick}
+            disabled={!onAvatarClick}
+            className={`focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 rounded-full ${
+              onAvatarClick
+                ? "cursor-pointer hover:opacity-80 transition-opacity"
+                : ""
+            }`}
+          >
+            {participant.avatar ? (
+              <img
+                src={participant.avatar}
+                alt={participant.name}
+                className="w-10 h-10 rounded-full"
+              />
+            ) : (
+              <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-medium">
+                {participant.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </button>
           <div
             className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(
               participant.status

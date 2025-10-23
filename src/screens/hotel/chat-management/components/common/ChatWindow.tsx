@@ -14,6 +14,7 @@ interface ChatWindowProps {
   onVideoCall?: () => void;
   onPhoneCall?: () => void;
   onInfo?: () => void;
+  onAvatarClick?: () => void;
   inputPlaceholder?: string;
   isLoading?: boolean;
 }
@@ -28,6 +29,7 @@ export function ChatWindow({
   onVideoCall,
   onPhoneCall,
   onInfo,
+  onAvatarClick,
   inputPlaceholder,
   isLoading = false,
 }: ChatWindowProps) {
@@ -74,10 +76,19 @@ export function ChatWindow({
         onVideoCall={onVideoCall}
         onPhoneCall={onPhoneCall}
         onInfo={onInfo}
+        onAvatarClick={onAvatarClick}
       />
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto bg-gray-50">
+      <div
+        className="flex-1 overflow-y-auto bg-gray-50"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+      >
+        <style>{`
+          .flex-1::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
         <div className="p-4 space-y-1">
           {isLoading ? (
             <div className="flex justify-center py-8">

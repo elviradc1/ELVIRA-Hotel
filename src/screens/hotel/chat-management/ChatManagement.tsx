@@ -3,11 +3,7 @@ import { TabsWithoutSearch, type TabItem } from "../../../components/ui";
 import { GuestCommunication, StaffCommunication } from "./components";
 import { useConversations } from "../../../hooks/chat-management/useConversations";
 import { useHotelId } from "../../../hooks/useHotelContext";
-import {
-  PageContent,
-  TableContainer,
-  PageHeader,
-} from "../../../components/shared/page-layouts";
+import { PageHeader } from "../../../components/shared/page-layouts";
 import { colors, typography, spacing } from "../../../utils/theme";
 
 export function ChatManagement() {
@@ -72,7 +68,7 @@ export function ChatManagement() {
   };
 
   return (
-    <PageContent>
+    <div className="flex flex-col h-full">
       {/* Standardized Page Header */}
       <PageHeader
         title="Chat Management"
@@ -133,8 +129,8 @@ export function ChatManagement() {
         onTabChange={setActiveTab}
       />
 
-      {/* Content Area */}
-      <TableContainer>{getTabContent()}</TableContainer>
-    </PageContent>
+      {/* Content Area - Flex to fill remaining space */}
+      <div className="flex-1 overflow-hidden">{getTabContent()}</div>
+    </div>
   );
 }

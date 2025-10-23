@@ -20,3 +20,6 @@ export {
 
 // Staff Communication
 export * from "./staff-communication";
+
+// Group Chats
+export * from "./group-chats";

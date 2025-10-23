@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "../../../../../components/ui";
-import { LoadingState } from "../../../../../components/ui/states";
 import {
   useGetOrCreateStaffConversation,
   useStaffMessages,
   useSendStaffMessage,
+  useStaffConversationCache,
+  getConversationFromCache,
 } from "../../../../../hooks/chat-management";
 import { useAuth } from "../../../../../hooks/useAuth";
 
@@ -27,9 +28,11 @@ export function StaffConversationView({
 }: StaffConversationViewProps) {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messageText, setMessageText] = useState("");
+  const [isInitializing, setIsInitializing] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
 
+  const { data: conversationCache } = useStaffConversationCache();
   const getOrCreateConversation = useGetOrCreateStaffConversation();
   const { data: messages, isLoading: messagesLoading } = useStaffMessages(
     conversationId || undefined
@@ -38,56 +41,51 @@ export function StaffConversationView({
 
   // Get or create conversation when staff is selected
   useEffect(() => {
-    console.log("🔄 [StaffConversationView] useEffect triggered");
-    console.log("🔄 otherStaffId:", otherStaffId);
-    console.log("🔄 Current conversationId:", conversationId);
-    console.log(
-      "🔄 getOrCreateConversation.isPending:",
-      getOrCreateConversation.isPending
-    );
-
-    if (!otherStaffId) {
-      console.log(
-        "⚠️ [StaffConversationView] No otherStaffId, clearing conversation"
-      );
+    // Wait for user to be loaded
+    if (!user?.id) {
       setConversationId(null);
+      setIsInitializing(true); // Keep loading while user loads
       return;
     }
 
+    if (!otherStaffId) {
+      setConversationId(null);
+      setIsInitializing(false);
+      return;
+    }
+
+    // First, check the cache for instant lookup
+    const cachedConversationId = getConversationFromCache(
+      conversationCache,
+      user.id,
+      otherStaffId
+    );
+
+    if (cachedConversationId) {
+      console.log("⚡ Found conversation in cache:", cachedConversationId);
+      setConversationId(cachedConversationId);
+      setIsInitializing(false);
+      return;
+    }
+
+    // Not in cache - fetch or create
+    setIsInitializing(true);
+
     const initConversation = async () => {
       try {
-        console.log(
-          "🔄 [StaffConversationView] Calling getOrCreateConversation..."
-        );
         const conversation = await getOrCreateConversation.mutateAsync(
           otherStaffId
         );
-        console.log(
-          "✅ [StaffConversationView] Conversation obtained:",
-          conversation
-        );
-        console.log(
-          "✅ [StaffConversationView] Setting conversationId to:",
-          conversation.id
-        );
         setConversationId(conversation.id);
       } catch (error) {
-        console.error(
-          "❌ [StaffConversationView] Error getting/creating conversation:",
-          error
-        );
-        if (error instanceof Error) {
-          console.error("❌ Error details:", {
-            name: error.name,
-            message: error.message,
-            stack: error.stack,
-          });
-        }
+        console.error("Error getting/creating conversation:", error);
+      } finally {
+        setIsInitializing(false);
       }
     };
 
     initConversation();
-  }, [otherStaffId]); // Only depend on otherStaffId, not conversationId
+  }, [otherStaffId, conversationCache, user?.id]); // Add cache to dependencies, not conversationId
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -101,46 +99,18 @@ export function StaffConversationView({
     : "Unknown";
 
   const handleSendMessage = async () => {
-    console.log("📧 [StaffConversationView] handleSendMessage called");
-    console.log("📧 Message text:", messageText);
-    console.log("📧 Message trimmed:", messageText.trim());
-    console.log("📧 Conversation ID:", conversationId);
-    console.log("📧 Is mutation pending:", sendMessage.isPending);
-
-    if (!messageText.trim()) {
-      console.warn("⚠️ [StaffConversationView] Message is empty, aborting");
-      return;
-    }
-
-    if (!conversationId) {
-      console.error("❌ [StaffConversationView] No conversation ID, aborting");
-      return;
-    }
-
-    if (sendMessage.isPending) {
-      console.warn(
-        "⚠️ [StaffConversationView] Message send already in progress"
-      );
+    if (!messageText.trim() || !conversationId || sendMessage.isPending) {
       return;
     }
 
     try {
-      console.log(
-        "📧 [StaffConversationView] Calling sendMessage.mutateAsync..."
-      );
       await sendMessage.mutateAsync({
         conversationId,
         message: messageText,
       });
-      console.log("✅ [StaffConversationView] Message sent, clearing input");
       setMessageText("");
     } catch (error) {
-      console.error("❌ [StaffConversationView] Error sending message:", error);
-      if (error instanceof Error) {
-        console.error("❌ Error name:", error.name);
-        console.error("❌ Error message:", error.message);
-        console.error("❌ Error stack:", error.stack);
-      }
+      console.error("Error sending message:", error);
     }
   };
 
@@ -151,10 +121,14 @@ export function StaffConversationView({
     }
   };
 
-  if (getOrCreateConversation.isPending) {
+  // Show minimal loading state
+  if (isInitializing) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <LoadingState message="Loading conversation..." />
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-2"></div>
+          <p className="text-sm text-gray-500">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -169,12 +143,6 @@ export function StaffConversationView({
               ? getOrCreateConversation.error.message
               : "Unknown error occurred"}
           </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
-          >
-            Reload Page
-          </button>
         </div>
       </div>
     );
@@ -183,7 +151,10 @@ export function StaffConversationView({
   if (!conversationId) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <LoadingState message="Preparing conversation..." />
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-2"></div>
+          <p className="text-sm text-gray-500">Preparing conversation...</p>
+        </div>
       </div>
     );
   }
@@ -201,7 +172,12 @@ export function StaffConversationView({
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messagesLoading ? (
-          <LoadingState message="Loading messages..." />
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-2"></div>
+              <p className="text-sm text-gray-500">Loading messages...</p>
+            </div>
+          </div>
         ) : messages && messages.length > 0 ? (
           messages.map((message: any) => {
             const isCurrentUser = message.sender_id === user?.id;

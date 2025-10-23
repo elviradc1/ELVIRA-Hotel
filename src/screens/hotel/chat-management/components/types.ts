@@ -12,15 +12,17 @@ export interface ChatMessage {
 
 export interface ChatConversation {
   id: string;
-  participantId: string;
+  participantId?: string; // Optional for group chats
   participantName: string;
   participantAvatar?: string;
-  lastMessage: string;
-  lastMessageTime: Date;
+  lastMessage?: string; // Optional for staff without conversations
+  lastMessageTime?: Date; // Optional for staff without conversations
   unreadCount: number;
   status: "active" | "away" | "offline";
   roomNumber?: string; // For guest conversations
   department?: string; // For staff conversations
+  isGroup?: boolean; // For group chats
+  participantCount?: number; // Number of participants in group
 }
 
 export interface ChatUser {

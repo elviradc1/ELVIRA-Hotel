@@ -13,7 +13,6 @@ export function useStaffMessages(conversationId?: string) {
     queryKey: queryKeys.staffMessages(conversationId || ""),
     queryFn: async () => {
       if (!conversationId) {
-        console.log("❌ No conversation ID for staff messages");
         return [];
       }
 
@@ -39,10 +38,16 @@ export function useStaffMessages(conversationId?: string) {
         .order("created_at", { ascending: true });
 
       if (error) {
-        console.error("❌ Staff messages query error:", error);
+        console.error("❌ [useStaffMessages] Query error:", error);
         throw error;
       }
 
+      console.log(
+        "✅ [useStaffMessages] Loaded",
+        data?.length || 0,
+        "messages for conversation:",
+        conversationId
+      );
       return data || [];
     },
     enabled: !!conversationId,
@@ -80,28 +85,21 @@ export function useSendStaffMessage() {
       conversationId: string;
       message: string;
     }) => {
-      console.log("📧 [useSendStaffMessage] Starting message send...");
-      console.log("📧 User ID:", user?.id);
-      console.log("📧 Conversation ID:", conversationId);
-      console.log("📧 Message:", message);
-
       if (!user?.id) {
-        console.error("❌ [useSendStaffMessage] No authenticated user");
         throw new Error("No authenticated user");
       }
 
       if (!conversationId) {
-        console.error("❌ [useSendStaffMessage] No conversation ID");
         throw new Error("No conversation ID provided");
       }
 
       if (!message || !message.trim()) {
-        console.error("❌ [useSendStaffMessage] Empty message");
         throw new Error("Message cannot be empty");
       }
 
       console.log(
-        "📧 [useSendStaffMessage] Inserting message into database..."
+        "� [useSendStaffMessage] Sending message to conversation:",
+        conversationId
       );
 
       // Insert message
@@ -131,19 +129,14 @@ export function useSendStaffMessage() {
         .single();
 
       if (error) {
-        console.error("❌ [useSendStaffMessage] Database error:", error);
-        console.error("❌ Error code:", error.code);
-        console.error("❌ Error message:", error.message);
-        console.error("❌ Error details:", error.details);
+        console.error(
+          "❌ [useSendStaffMessage] Failed to send message:",
+          error
+        );
         throw error;
       }
 
-      console.log("✅ [useSendStaffMessage] Message inserted:", data);
-
       // Update conversation last_message_at
-      console.log(
-        "📧 [useSendStaffMessage] Updating conversation timestamp..."
-      );
       const { error: updateError } = await supabase
         .from("staff_conversations")
         .update({ last_message_at: new Date().toISOString() })
@@ -151,23 +144,14 @@ export function useSendStaffMessage() {
 
       if (updateError) {
         console.warn(
-          "⚠️ [useSendStaffMessage] Failed to update conversation timestamp:",
-          updateError
+          "⚠️ [useSendStaffMessage] Failed to update conversation timestamp"
         );
-      } else {
-        console.log("✅ [useSendStaffMessage] Conversation timestamp updated");
       }
 
-      console.log("✅ [useSendStaffMessage] Message sent successfully!");
+      console.log("✅ [useSendStaffMessage] Message sent successfully");
       return data;
     },
     onSuccess: (data) => {
-      console.log("✅ [useSendStaffMessage] onSuccess called");
-      console.log(
-        "📧 Invalidating queries for conversation:",
-        data.conversation_id
-      );
-
       // Invalidate messages for this conversation
       queryClient.invalidateQueries({
         queryKey: queryKeys.staffMessages(data.conversation_id),
@@ -176,11 +160,9 @@ export function useSendStaffMessage() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.staffConversations(user?.id || ""),
       });
-
-      console.log("✅ [useSendStaffMessage] Queries invalidated");
     },
     onError: (error) => {
-      console.error("❌ [useSendStaffMessage] onError called:", error);
+      console.error("❌ [useSendStaffMessage] Error:", error);
     },
   });
 }

@@ -121,21 +121,16 @@ export function GuestCommunication() {
     });
   };
 
-  const handlePhoneCall = () => {
-    console.log(
-      "Initiating phone call to room:",
-      activeParticipant?.roomNumber
-    );
-  };
-
-  const handleInfo = () => {
-    console.log("Showing guest info for:", activeParticipant?.name);
+  // Handle filter button click
+  const handleFilterClick = () => {
+    console.log("Filter guest conversations");
+    // TODO: Implement filter functionality
   };
 
   const displayMessages = activeConversationId === "guest-1" ? messages : [];
 
   return (
-    <div className="h-[calc(100vh-140px)] flex bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="h-full flex bg-white rounded-lg border border-gray-200 overflow-hidden">
       {/* Conversations Sidebar */}
       <div className="w-80 border-r border-gray-200 bg-white">
         <ConversationList
@@ -145,6 +140,8 @@ export function GuestCommunication() {
           searchValue={searchValue}
           onSearchChange={setSearchValue}
           searchPlaceholder="Search guests..."
+          showFilterButton={true}
+          onFilterClick={handleFilterClick}
         />
       </div>
 
@@ -154,9 +151,6 @@ export function GuestCommunication() {
           participant={activeParticipant}
           messages={displayMessages}
           onSendMessage={handleSendMessage}
-          showPhoneCall={true}
-          onPhoneCall={handlePhoneCall}
-          onInfo={handleInfo}
           inputPlaceholder="Message guest..."
         />
       </div>

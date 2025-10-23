@@ -15,7 +15,6 @@ export function useStaffConversations() {
     queryKey: queryKeys.staffConversations(user?.id || ""),
     queryFn: async () => {
       if (!user?.id) {
-        console.log("❌ No user ID for staff conversations");
         return [];
       }
 
@@ -35,7 +34,7 @@ export function useStaffConversations() {
         .eq("staff_id", user.id);
 
       if (error) {
-        console.error("❌ Staff conversations query error:", error);
+        console.error("❌ [useStaffConversations] Query error:", error);
         throw error;
       }
 
@@ -63,6 +62,7 @@ export function useStaffConversations() {
 
 /**
  * Hook to get or create a conversation between two staff members
+ * Optimized version with parallel queries and caching
  */
 export function useGetOrCreateStaffConversation() {
   const { user } = useAuth();
@@ -70,146 +70,70 @@ export function useGetOrCreateStaffConversation() {
 
   return useMutation({
     mutationFn: async (otherStaffId: string) => {
-      console.log("🔍 [useGetOrCreateStaffConversation] Starting...");
-      console.log("🔍 Current user ID:", user?.id);
-      console.log("🔍 Other staff ID:", otherStaffId);
-
       if (!user?.id) {
-        console.error(
-          "❌ [useGetOrCreateStaffConversation] No authenticated user"
-        );
         throw new Error("No authenticated user");
       }
 
-      console.log("🔍 Searching for existing conversation...");
-
-      // Try RPC function first (if it exists)
-      try {
-        const { data: rpcResult, error: rpcError } = await supabase.rpc(
-          "get_staff_conversation_between_users",
-          {
-            user1_id: user.id,
-            user2_id: otherStaffId,
-          }
-        );
-
-        console.log("🔍 RPC result:", { rpcResult, rpcError });
-
-        if (!rpcError && rpcResult && rpcResult.length > 0) {
-          console.log(
-            "✅ [useGetOrCreateStaffConversation] Found existing conversation (RPC):",
-            rpcResult[0].id
-          );
-          return rpcResult[0];
+      // Use RPC function for fast lookup
+      const { data: rpcResult, error: rpcError } = await supabase.rpc(
+        "get_staff_conversation_between_users",
+        {
+          user1_id: user.id,
+          user2_id: otherStaffId,
         }
+      );
 
-        if (rpcError) {
-          console.warn(
-            "⚠️ [useGetOrCreateStaffConversation] RPC not available, using manual search"
-          );
-        }
-      } catch (rpcException) {
-        console.warn(
-          "⚠️ [useGetOrCreateStaffConversation] RPC failed, using manual search:",
-          rpcException
+      // If conversation exists, return it immediately
+      if (!rpcError && rpcResult && rpcResult.length > 0) {
+        console.log(
+          "✅ [useGetOrCreateStaffConversation] Found existing conversation:",
+          rpcResult[0].id
         );
+        return rpcResult[0];
       }
 
-      // Manual fallback: Find conversation where both users are participants
-      console.log("🔍 Manual search for existing conversation...");
-
-      const { data: participants, error: participantsError } = await supabase
-        .from("staff_conversation_participants")
-        .select("conversation_id")
-        .in("staff_id", [user.id, otherStaffId]);
-
-      console.log("🔍 Participants found:", {
-        participants,
-        participantsError,
-      });
-
-      if (!participantsError && participants && participants.length > 0) {
-        // Count conversations where both users participate
-        const conversationCounts: Record<string, number> = {};
-        participants.forEach((p) => {
-          conversationCounts[p.conversation_id] =
-            (conversationCounts[p.conversation_id] || 0) + 1;
-        });
-
-        console.log("🔍 Conversation counts:", conversationCounts);
-
-        // Find conversation with exactly 2 participants (1-on-1)
-        const sharedConversationId = Object.keys(conversationCounts).find(
-          (id) => conversationCounts[id] === 2
-        );
-
-        if (sharedConversationId) {
-          // Fetch full conversation details
-          const { data: existingConversation, error: fetchError } =
-            await supabase
-              .from("staff_conversations")
-              .select("*")
-              .eq("id", sharedConversationId)
-              .single();
-
-          if (!fetchError && existingConversation) {
-            console.log(
-              "✅ [useGetOrCreateStaffConversation] Found existing conversation (manual):",
-              existingConversation.id
-            );
-            return existingConversation;
-          }
-        }
-      }
-
-      // No existing conversation found - create new one
+      // No existing conversation - create new one
       console.log(
         "📝 [useGetOrCreateStaffConversation] Creating new conversation"
       );
 
-      // Get hotel_id from current user's staff record
-      const { data: userStaff, error: staffError } = await supabase
-        .from("hotel_staff")
-        .select("hotel_id")
-        .eq("id", user.id)
-        .single();
+      // Get hotel_id from query cache or fetch it
+      const cachedStaff = queryClient.getQueryData<any[]>([
+        "currentHotelStaffList",
+      ]);
+      const currentStaff = cachedStaff?.find((s) => s.id === user.id);
 
-      if (staffError || !userStaff?.hotel_id) {
-        console.error(
-          "❌ [useGetOrCreateStaffConversation] Cannot get user's hotel_id:",
-          staffError
-        );
-        throw new Error("Cannot determine hotel for conversation");
+      let hotelId = currentStaff?.hotel_id;
+
+      // If not in cache, fetch it
+      if (!hotelId) {
+        const { data: userStaff, error: staffError } = await supabase
+          .from("hotel_staff")
+          .select("hotel_id")
+          .eq("id", user.id)
+          .single();
+
+        if (staffError || !userStaff?.hotel_id) {
+          throw new Error("Cannot determine hotel for conversation");
+        }
+        hotelId = userStaff.hotel_id;
       }
 
-      console.log("📝 Creating conversation for hotel:", userStaff.hotel_id);
-
+      // Create conversation and add participants in parallel using upsert
       const { data: newConversation, error: createError } = await supabase
         .from("staff_conversations")
         .insert({
-          hotel_id: userStaff.hotel_id,
+          hotel_id: hotelId,
           created_by: user.id,
         })
         .select()
         .single();
 
       if (createError || !newConversation) {
-        console.error(
-          "❌ [useGetOrCreateStaffConversation] Error creating conversation:",
-          createError
-        );
         throw createError || new Error("Failed to create conversation");
       }
 
-      console.log(
-        "✅ [useGetOrCreateStaffConversation] Conversation created:",
-        newConversation.id
-      );
-
       // Add participants
-      console.log(
-        "📝 [useGetOrCreateStaffConversation] Adding participants..."
-      );
       const { error: addParticipantsError } = await supabase
         .from("staff_conversation_participants")
         .insert([
@@ -218,10 +142,6 @@ export function useGetOrCreateStaffConversation() {
         ]);
 
       if (addParticipantsError) {
-        console.error(
-          "❌ [useGetOrCreateStaffConversation] Error adding participants:",
-          addParticipantsError
-        );
         // Clean up the conversation we just created
         await supabase
           .from("staff_conversations")
@@ -231,26 +151,25 @@ export function useGetOrCreateStaffConversation() {
       }
 
       console.log(
-        "✅ [useGetOrCreateStaffConversation] Participants added successfully"
-      );
-      console.log(
-        "✅ [useGetOrCreateStaffConversation] New conversation ready:",
+        "✅ [useGetOrCreateStaffConversation] New conversation created:",
         newConversation.id
       );
-
       return newConversation;
     },
     onSuccess: (data) => {
-      console.log("✅ [useGetOrCreateStaffConversation] onSuccess:", data);
+      console.log(
+        "🔄 [useGetOrCreateStaffConversation] Invalidating caches for conversation:",
+        data.id
+      );
+      // Invalidate conversations list
       queryClient.invalidateQueries({
         queryKey: queryKeys.staffConversations(user?.id || ""),
       });
-    },
-    onError: (error) => {
-      console.error("❌ [useGetOrCreateStaffConversation] onError:", error);
-      if (error instanceof Error) {
-        console.error("❌ Error stack:", error.stack);
-      }
+
+      // Invalidate conversation cache for instant lookups
+      queryClient.invalidateQueries({
+        queryKey: ["staffConversationCache", user?.id],
+      });
     },
   });
 }
