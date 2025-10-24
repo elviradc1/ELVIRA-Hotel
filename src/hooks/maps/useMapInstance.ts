@@ -34,11 +34,21 @@ export function useMapInstance(
       mapTypeId: mapTypeId as any,
       disableDefaultUI: false,
       zoomControl: true,
+      zoomControlOptions: {
+        position: (window as any).google.maps.ControlPosition.RIGHT_CENTER,
+      },
       mapTypeControl: true,
+      mapTypeControlOptions: {
+        position: (window as any).google.maps.ControlPosition.TOP_RIGHT,
+      },
       scaleControl: true,
       streetViewControl: false,
       rotateControl: false,
       fullscreenControl: true,
+      fullscreenControlOptions: {
+        position: (window as any).google.maps.ControlPosition.RIGHT_TOP,
+      },
+      gestureHandling: "greedy", // Allow panning and zooming without Ctrl key
       ...mapOptions,
     };
 
