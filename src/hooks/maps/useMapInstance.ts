@@ -25,6 +25,7 @@ export function useMapInstance(
 
   const { center, zoom = 13, mapTypeId = "roadmap", mapOptions = {} } = options;
 
+  // Create map only once when loaded
   useEffect(() => {
     if (!isLoaded || !mapRef.current || map) return;
 
@@ -56,15 +57,18 @@ export function useMapInstance(
       mapRef.current,
       defaultOptions
     );
-    setMap(newMap);
-  }, [isLoaded, center, zoom, mapTypeId, map, mapOptions]);
 
-  // Update center when it changes
+    setMap(newMap);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded]); // Only re-create map when isLoaded changes
+
+  // Update center when it changes (but not on initial render)
   useEffect(() => {
-    if (map && center) {
+    if (map) {
       map.setCenter(center);
     }
-  }, [map, center]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, center.lat, center.lng]); // Use primitive values to avoid unnecessary updates
 
   return { mapRef, map };
 }

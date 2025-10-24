@@ -35,7 +35,7 @@ export function MapViewModal({
       } Places - Map View`}
       size="xl"
     >
-      <div className="h-[calc(100vh-16rem)]">
+      <div className="h-[calc(100vh-16rem)] relative">
         <ThirdPartyMapView
           places={places}
           category={category}

@@ -17,34 +17,37 @@ export function createHotelMarkerIcon(): any {
 
 /**
  * Creates a custom place marker icon with category-based colors
+ * Priority: Recommended (yellow/gold star) > Approved (category color) > Not approved (gray)
  */
 export function createPlaceMarkerIcon(
   category: string,
   isApproved: boolean = false,
   isRecommended: boolean = false
 ): any {
-  let fillColor = "#6b7280"; // gray-500 (default)
+  let fillColor = "#9ca3af"; // gray-400 (not approved/pending)
 
-  // Category-based colors
-  if (category === "gastronomy") {
-    fillColor = "#a855f7"; // purple-500
-  } else if (category === "tours") {
-    fillColor = "#3b82f6"; // blue-500
-  } else if (category === "wellness") {
-    fillColor = "#ec4899"; // pink-500
+  // If approved, use category colors
+  if (isApproved) {
+    if (category === "gastronomy") {
+      fillColor = "#a855f7"; // purple-500
+    } else if (category === "tours") {
+      fillColor = "#3b82f6"; // blue-500
+    } else if (category === "wellness") {
+      fillColor = "#ec4899"; // pink-500
+    } else {
+      fillColor = "#10b981"; // emerald-500 (default approved)
+    }
   }
 
-  // Override with status colors
+  // Recommended places get yellow/gold color (highest priority)
   if (isRecommended) {
     fillColor = "#eab308"; // yellow-500 (gold)
-  } else if (isApproved) {
-    fillColor = "#10b981"; // emerald-500
   }
 
   return {
     path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z",
     fillColor,
-    fillOpacity: 0.9,
+    fillOpacity: 1,
     strokeColor: "#ffffff",
     strokeWeight: 2,
     scale: 1.2,

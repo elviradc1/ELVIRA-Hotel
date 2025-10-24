@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   GoogleMap,
   type MapMarker,
@@ -86,11 +86,11 @@ export function ThirdPartyMapView({
   // Legend items
   const legendItems = useMemo(() => {
     const items = [
-      { label: "Your Hotel", color: "#10b981", icon: "pin" as const },
-      { label: "Recommended", color: "#eab308", icon: "star" as const },
-      { label: "Approved", color: "#10b981", icon: "pin" as const },
+      { label: "Your Hotel", color: "#10b981", icon: "star" as const },
+      { label: "Recommended", color: "#eab308", icon: "pin" as const },
     ];
 
+    // Add category-specific colors based on the current view
     if (!category || category === "gastronomy") {
       items.push({
         label: "Gastronomy",
@@ -105,6 +105,13 @@ export function ThirdPartyMapView({
       items.push({ label: "Wellness", color: "#ec4899", icon: "pin" as const });
     }
 
+    // Add pending/not approved indicator
+    items.push({
+      label: "Pending Review",
+      color: "#9ca3af",
+      icon: "pin" as const,
+    });
+
     return items;
   }, [category]);
 
@@ -118,9 +125,11 @@ export function ThirdPartyMapView({
         className="w-full h-full rounded-lg"
       />
 
-      {/* Legend */}
-      <div className="absolute top-4 right-4 z-10">
-        <MapLegend items={legendItems} title="Map Legend" />
+      {/* Legend - positioned to not block map controls */}
+      <div className="absolute top-4 left-4 z-10 pointer-events-none">
+        <div className="pointer-events-auto bg-white rounded-lg shadow-lg">
+          <MapLegend items={legendItems} title="Map Legend" />
+        </div>
       </div>
 
       {/* Place count info */}

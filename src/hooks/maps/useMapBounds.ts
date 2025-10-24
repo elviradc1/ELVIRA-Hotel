@@ -42,7 +42,8 @@ export function useMapBounds(
       east: googleBounds.getNorthEast().lng(),
       west: googleBounds.getSouthWest().lng(),
     });
-  }, [map, locations, padding]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, locations.length, padding]); // Only depend on length, not the array itself
 
   return bounds;
 }

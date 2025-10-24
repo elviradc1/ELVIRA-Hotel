@@ -15,7 +15,6 @@ interface GoogleMapsState {
  * Manages the loading state and prevents duplicate script loading
  */
 export function useGoogleMaps(options: UseGoogleMapsOptions = {}) {
-  const { libraries = ["places", "geometry"] } = options;
   const [state, setState] = useState<GoogleMapsState>({
     isLoaded: false,
     loadError: null,
@@ -69,7 +68,7 @@ export function useGoogleMaps(options: UseGoogleMapsOptions = {}) {
       clearInterval(checkInterval);
       clearTimeout(timeout);
     };
-  }, [libraries]);
+  }, []); // Only run once on mount
 
   return state;
 }

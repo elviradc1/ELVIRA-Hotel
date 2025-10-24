@@ -186,6 +186,10 @@ export function useApproveHotelPlace() {
       queryClient.invalidateQueries({
         queryKey: ["hotel-approved-places", data.hotel_id],
       });
+      // Invalidate stats to update statistic cards
+      queryClient.invalidateQueries({
+        queryKey: ["hotel-thirdparty-places", "stats"],
+      });
     },
   });
 }
@@ -237,6 +241,10 @@ export function useRejectHotelPlace() {
         });
         queryClient.invalidateQueries({
           queryKey: ["hotel-recommended-places", data.hotel_id],
+        });
+        // Invalidate stats to update statistic cards
+        queryClient.invalidateQueries({
+          queryKey: ["hotel-thirdparty-places", "stats"],
         });
       }
     },
@@ -292,6 +300,10 @@ export function useToggleHotelRecommended() {
       });
       queryClient.invalidateQueries({
         queryKey: ["hotel-recommended-places", data.hotel_id],
+      });
+      // Invalidate stats to update statistic cards
+      queryClient.invalidateQueries({
+        queryKey: ["hotel-thirdparty-places", "stats"],
       });
     },
   });

@@ -71,7 +71,7 @@ export function usePlacesTable({
     return map;
   }, [hotelPlaces]);
 
-  // Filter places based on search and distance
+  // Filter places based on search and distance, and enrich with hotel relationship status
   const filteredPlaces = useMemo(() => {
     if (!places) return [];
 
@@ -103,13 +103,22 @@ export function usePlacesTable({
       });
     }
 
-    return filtered;
+    // Enrich places with hotel relationship status for map markers
+    return filtered.map((place) => {
+      const hotelStatus = hotelPlaceMap.get(place.id);
+      return {
+        ...place,
+        hotel_approved: hotelStatus?.approved || false,
+        hotel_recommended: hotelStatus?.recommended || false,
+      };
+    });
   }, [
     places,
     searchValue,
     hotelInfo?.hotel?.latitude,
     hotelInfo?.hotel?.longitude,
     maxDistance,
+    hotelPlaceMap,
   ]);
 
   // Handlers

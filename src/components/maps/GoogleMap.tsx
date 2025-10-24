@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect } from "react";
 import {
   useGoogleMaps,
   useMapInstance,
@@ -49,10 +50,12 @@ export function GoogleMap({
     : [];
   useMapBounds(map, locations, 80);
 
-  // Callback when map is loaded
-  if (map && onMapLoad) {
-    onMapLoad(map);
-  }
+  // Callback when map is loaded - use useEffect to avoid calling setState during render
+  useEffect(() => {
+    if (map && onMapLoad) {
+      onMapLoad(map);
+    }
+  }, [map, onMapLoad]);
 
   if (loadError) {
     return (
