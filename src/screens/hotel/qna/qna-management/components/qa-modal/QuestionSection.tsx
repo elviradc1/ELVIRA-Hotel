@@ -1,4 +1,8 @@
-import { ModalFormSection, ModalFormGrid, Input } from "../../../../../../components/ui";
+import {
+  ModalFormSection,
+  ModalFormGrid,
+  Input,
+} from "../../../../../../components/ui";
 import type { QAFormData } from "./types";
 
 interface QuestionSectionProps {

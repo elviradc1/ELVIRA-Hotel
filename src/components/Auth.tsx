@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 
-export function Auth() {
+interface AuthProps {
+  onSwitchToGuestLogin: () => void;
+}
+
+export function Auth({ onSwitchToGuestLogin }: AuthProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -14,14 +18,14 @@ export function Auth() {
     e.preventDefault();
     setLoading(true);
     setMessage("");
-try {
+    try {
       const { error } = await signIn(email, password);
-if (error) {
-setMessage(error.message);
+      if (error) {
+        setMessage(error.message);
       } else {
-}
+      }
     } catch (error) {
-setMessage("An unexpected error occurred");
+      setMessage("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -46,7 +50,7 @@ setMessage("An unexpected error occurred");
         setShowForgotPassword(false);
       }
     } catch (error) {
-setMessage("An unexpected error occurred");
+      setMessage("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -200,8 +204,22 @@ setMessage("An unexpected error occurred");
           </div>
         </form>
 
+        {/* Guest Login Link */}
+        <div className="text-center mt-6">
+          <p className="text-sm text-gray-600">
+            Are you a guest?{" "}
+            <button
+              type="button"
+              onClick={onSwitchToGuestLogin}
+              className="text-emerald-600 hover:text-emerald-700 font-medium underline transition-colors"
+            >
+              Access Guest Dashboard
+            </button>
+          </p>
+        </div>
+
         {/* Footer */}
-        <div className="text-center">
+        <div className="text-center mt-4">
           <p className="text-xs text-gray-500">
             Protected by industry-standard security
           </p>

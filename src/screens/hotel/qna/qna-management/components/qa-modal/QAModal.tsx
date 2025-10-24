@@ -6,7 +6,8 @@ import { CategorySection } from "./CategorySection";
 import type { QAFormData } from "./types";
 import type { Database } from "../../../../../../types/database";
 
-type QARecommendation = Database["public"]["Tables"]["qa_recommendations"]["Row"];
+type QARecommendation =
+  Database["public"]["Tables"]["qa_recommendations"]["Row"];
 
 interface QAModalProps {
   isOpen: boolean;
@@ -82,9 +83,17 @@ export function QAModal({
       size="2xl"
       onSubmit={handleSubmit}
     >
-      <QuestionSection formData={formData} onChange={handleChange} mode={mode} />
+      <QuestionSection
+        formData={formData}
+        onChange={handleChange}
+        mode={mode}
+      />
       <AnswerSection formData={formData} onChange={handleChange} mode={mode} />
-      <CategorySection formData={formData} onChange={handleChange} mode={mode} />
+      <CategorySection
+        formData={formData}
+        onChange={handleChange}
+        mode={mode}
+      />
 
       <ModalFormActions
         mode={mode}

@@ -19,7 +19,9 @@ interface QnAManagementProps {
 export function QnAManagement({ searchValue }: QnAManagementProps) {
   const { hotelId } = useHotelContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<"create" | "edit" | "view">("create");
+  const [modalMode, setModalMode] = useState<"create" | "edit" | "view">(
+    "create"
+  );
   const [selectedQA, setSelectedQA] = useState<QARecommendation | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [qaToDelete, setQAToDelete] = useState<QARecommendation | null>(null);
@@ -114,11 +116,7 @@ export function QnAManagement({ searchValue }: QnAManagementProps) {
             Manage frequently asked questions and their answers for guests.
           </p>
         </div>
-        <Button
-          variant="primary"
-          size="md"
-          onClick={handleAdd}
-        >
+        <Button variant="primary" size="md" onClick={handleAdd}>
           <svg
             className="w-4 h-4 mr-2"
             fill="none"
