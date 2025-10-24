@@ -55,12 +55,6 @@ export function MenuItems({ searchValue }: MenuItemsProps) {
     setIsModalOpen(true);
   };
 
-  const handleEdit = (menuItem: MenuItem) => {
-    setSelectedMenuItem(menuItem);
-    setModalMode("edit");
-    setIsModalOpen(true);
-  };
-
   const handleView = (menuItem: MenuItem) => {
     setSelectedMenuItem(menuItem);
     setModalMode("view");

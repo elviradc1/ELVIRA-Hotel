@@ -3,18 +3,12 @@ import {
   Table,
   type TableColumn,
   StatusBadge,
-  ConfirmationModal,
 } from "../../../../../components/ui";
 import {
   useProducts,
   useUpdateProduct,
-  useDeleteProduct,
 } from "../../../../../hooks/hotel-shop/products/useProducts";
 import { useHotelId } from "../../../../../hooks/useHotelContext";
-import { usePagination } from "../../../../../hooks";
-import { ProductDetailModal } from "./product-detail-modal";
-import { AddProductModal } from "./add-product-modal";
-import { useItemTableModals } from "../../../../../components/shared/tables/useItemTableModals";
 import type { Database } from "../../../../../types/database";
 
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
@@ -33,26 +27,11 @@ interface Product extends Record<string, unknown> {
 
 interface ProductsTableProps {
   searchValue: string;
+  onView: (product: ProductRow) => void;
 }
 
-export function ProductsTable({ searchValue }: ProductsTableProps) {
+export function ProductsTable({ searchValue, onView }: ProductsTableProps) {
   const hotelId = useHotelId();
-
-  // Use shared modal state management hook
-  const {
-    selectedItem: selectedProduct,
-    isDetailModalOpen,
-    openDetailModal,
-    closeDetailModal,
-    itemToEdit: productToEdit,
-    isEditModalOpen,
-    closeEditModal,
-    itemToDelete: productToDelete,
-    isDeleteConfirmOpen,
-    closeDeleteConfirm,
-    handleEdit,
-    handleDelete,
-  } = useItemTableModals<ProductRow>();
 
   // Fetch products using the hook
   const {
@@ -61,36 +40,14 @@ export function ProductsTable({ searchValue }: ProductsTableProps) {
     error,
   } = useProducts(hotelId || undefined);
 
-  // Get the mutations
+  // Get the mutation
   const updateProduct = useUpdateProduct();
-  const deleteProduct = useDeleteProduct();
 
-  // Handle row click to open details modal
+  // Handle row click
   const handleRowClick = (row: Product) => {
     const fullProduct = products?.find((item) => item.id === row.id);
     if (fullProduct) {
-      openDetailModal(fullProduct);
-    }
-  };
-
-  // Close detail modal (alias for consistency)
-  const handleCloseModal = closeDetailModal;
-
-  // Edit handler is now provided by the hook (handleEdit)
-
-  // Delete handler is now provided by the hook (handleDelete)
-
-  // Confirm delete action
-  const confirmDelete = () => {
-    if (productToDelete && hotelId) {
-      deleteProduct.mutate(
-        { id: productToDelete.id, hotelId },
-        {
-          onSuccess: () => {
-            closeDeleteConfirm();
-          },
-        }
-      );
+      onView(fullProduct);
     }
   };
 
@@ -222,15 +179,6 @@ export function ProductsTable({ searchValue }: ProductsTableProps) {
       }));
   }, [products, searchValue]);
 
-  // Pagination
-  const {
-    currentPage,
-    totalPages,
-    paginatedData,
-    itemsPerPage,
-    setCurrentPage,
-  } = usePagination<Product>({ data: productData, itemsPerPage: 10 });
-
   if (error) {
     return (
       <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
@@ -253,7 +201,7 @@ export function ProductsTable({ searchValue }: ProductsTableProps) {
       <div className="bg-white rounded-lg border border-gray-200">
         <Table
           columns={columns}
-          data={paginatedData}
+          data={productData}
           loading={isLoading}
           emptyMessage={
             searchValue
@@ -261,42 +209,9 @@ export function ProductsTable({ searchValue }: ProductsTableProps) {
               : "No products found. Add new products to get started."
           }
           onRowClick={handleRowClick}
-          showPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={productData.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
+          itemsPerPage={10}
         />
       </div>
-
-      {/* Detail Modal with Edit/Delete actions */}
-      <ProductDetailModal
-        isOpen={isDetailModalOpen}
-        onClose={handleCloseModal}
-        product={selectedProduct}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
-
-      {/* Confirmation Modal for Delete */}
-      <ConfirmationModal
-        isOpen={isDeleteConfirmOpen}
-        title="Delete Product"
-        message="Are you sure you want to delete this product? This action cannot be undone."
-        confirmText="Delete"
-        variant="danger"
-        onConfirm={confirmDelete}
-        onClose={closeDeleteConfirm}
-        loading={deleteProduct.isPending}
-      />
-
-      {/* Edit Product Modal */}
-      <AddProductModal
-        isOpen={isEditModalOpen}
-        onClose={closeEditModal}
-        product={productToEdit}
-      />
     </div>
   );
 }

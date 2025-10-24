@@ -1,17 +1,11 @@
 import { useMemo, useState } from "react";
-import {
-  Table,
-  type TableColumn,
-  ConfirmationModal,
-} from "../../../../../components/ui";
+import { Table, type TableColumn } from "../../../../../components/ui";
 import {
   useShopOrders,
-  useDeleteShopOrder,
   type ShopOrderWithDetails,
 } from "../../../../../hooks/hotel-shop/shop-orders/useShopOrders";
 import { useHotelId } from "../../../../../hooks/useHotelContext";
-import { usePagination } from "../../../../../hooks";
-import { ShopOrderDetailModal } from "../../shop-orders/components/shop-order-detail-modal";
+import { ShopOrderModal } from "./shop-order-modal";
 
 interface ShopOrder extends Record<string, unknown> {
   id: string;
@@ -32,9 +26,6 @@ export function ShopOrdersTable({ searchValue }: ShopOrdersTableProps) {
   const [selectedOrder, setSelectedOrder] =
     useState<ShopOrderWithDetails | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [orderToDelete, setOrderToDelete] =
-    useState<ShopOrderWithDetails | null>(null);
 
   // Fetch shop orders using the hook
   const {
@@ -42,9 +33,6 @@ export function ShopOrdersTable({ searchValue }: ShopOrdersTableProps) {
     isLoading,
     error,
   } = useShopOrders(hotelId || undefined);
-
-  // Get delete mutation
-  const deleteOrder = useDeleteShopOrder();
 
   // Handle row click to open details modal
   const handleRowClick = (row: ShopOrder) => {
@@ -59,30 +47,6 @@ export function ShopOrdersTable({ searchValue }: ShopOrdersTableProps) {
   const handleCloseModal = () => {
     setIsDetailModalOpen(false);
     setSelectedOrder(null);
-  };
-
-  // Delete handler: open confirmation modal
-  const handleDelete = () => {
-    if (selectedOrder) {
-      setOrderToDelete(selectedOrder);
-      setIsDeleteConfirmOpen(true);
-      setIsDetailModalOpen(false);
-    }
-  };
-
-  // Confirm delete action
-  const confirmDelete = () => {
-    if (orderToDelete && hotelId) {
-      deleteOrder.mutate(
-        { id: orderToDelete.id, hotelId },
-        {
-          onSuccess: () => {
-            setIsDeleteConfirmOpen(false);
-            setOrderToDelete(null);
-          },
-        }
-      );
-    }
   };
 
   // Define table columns for shop orders
@@ -153,15 +117,6 @@ export function ShopOrdersTable({ searchValue }: ShopOrdersTableProps) {
       }));
   }, [shopOrders, searchValue]);
 
-  // Pagination
-  const {
-    currentPage,
-    totalPages,
-    paginatedData,
-    itemsPerPage,
-    setCurrentPage,
-  } = usePagination<ShopOrder>({ data: orderData, itemsPerPage: 10 });
-
   if (error) {
     return (
       <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
@@ -184,40 +139,19 @@ export function ShopOrdersTable({ searchValue }: ShopOrdersTableProps) {
       <div className="bg-white rounded-lg border border-gray-200">
         <Table
           columns={columns}
-          data={paginatedData}
+          data={orderData}
           loading={isLoading}
           emptyMessage="No shop orders found. Orders will appear here once guests start purchasing items."
           onRowClick={handleRowClick}
-          showPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={orderData.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
+          itemsPerPage={10}
         />
       </div>
 
       {/* Order Detail Modal */}
-      <ShopOrderDetailModal
+      <ShopOrderModal
         isOpen={isDetailModalOpen}
         onClose={handleCloseModal}
         order={selectedOrder}
-        onDelete={handleDelete}
-      />
-
-      {/* Confirmation Modal for Delete */}
-      <ConfirmationModal
-        isOpen={isDeleteConfirmOpen}
-        title="Delete Order"
-        message="Are you sure you want to delete this order? This action cannot be undone."
-        confirmText="Delete"
-        variant="danger"
-        onConfirm={confirmDelete}
-        onClose={() => {
-          setIsDeleteConfirmOpen(false);
-          setOrderToDelete(null);
-        }}
-        loading={deleteOrder.isPending}
       />
     </div>
   );

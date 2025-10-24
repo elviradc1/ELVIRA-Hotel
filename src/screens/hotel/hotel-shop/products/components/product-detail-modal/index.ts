@@ -1,1 +1,0 @@
-export { ProductDetailModal } from "./ProductDetailModal";

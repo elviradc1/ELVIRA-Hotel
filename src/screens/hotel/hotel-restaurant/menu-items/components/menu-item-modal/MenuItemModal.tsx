@@ -77,8 +77,8 @@ export function MenuItemModal({
         hotelRecommended: menuItem.hotel_recommended || false,
         isActive: menuItem.is_active,
         restaurantIds: menuItem.restaurant_ids || [],
-        serviceTypes: menuItem.service_types || [],
-        dietaryInfo: menuItem.dietary_info || [],
+        serviceTypes: menuItem.service_type || [],
+        dietaryInfo: menuItem.special_type || [],
       });
     } else {
       setFormData({

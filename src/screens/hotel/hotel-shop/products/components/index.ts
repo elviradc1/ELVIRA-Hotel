@@ -1,2 +1,2 @@
 export { ProductsTable } from "./ProductsTable";
-export { AddProductModal } from "./add-product-modal";
+export { ProductModal, type ProductFormData } from "./product-modal";
