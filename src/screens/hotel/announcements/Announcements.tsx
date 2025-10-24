@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { AnnouncementsTable, AddAnnouncementModal } from "./components";
+import {
+  AnnouncementsTable,
+  AnnouncementModal,
+  type AnnouncementFormData,
+} from "./components";
 import type { Database } from "../../../types/database";
 import {
   PageContent,
@@ -7,28 +11,104 @@ import {
   PageToolbar,
   TableContainer,
 } from "../../../components/shared/page-layouts";
+import { ConfirmationModal } from "../../../components/ui";
+import {
+  useCreateAnnouncement,
+  useUpdateAnnouncement,
+  useDeleteAnnouncement,
+} from "../../../hooks/announcements/useAnnouncements";
+import { useHotelId, useAuth } from "../../../hooks";
 
-type Announcement = Database["public"]["Tables"]["announcements"]["Row"];
+type AnnouncementRow = Database["public"]["Tables"]["announcements"]["Row"];
+type ModalMode = "create" | "edit" | "view";
 
 export function Announcements() {
+  const hotelId = useHotelId();
+  const { user } = useAuth();
+
   const [searchValue, setSearchValue] = useState("");
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editAnnouncement, setEditAnnouncement] = useState<Announcement | null>(
-    null
-  );
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<ModalMode>("create");
+  const [selectedAnnouncement, setSelectedAnnouncement] =
+    useState<AnnouncementRow | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [announcementToDelete, setAnnouncementToDelete] =
+    useState<AnnouncementRow | null>(null);
+
+  const createAnnouncement = useCreateAnnouncement();
+  const updateAnnouncement = useUpdateAnnouncement();
+  const deleteAnnouncement = useDeleteAnnouncement();
 
   const handleSearchClear = () => {
     setSearchValue("");
   };
 
-  const handleEdit = (announcement: Announcement) => {
-    setEditAnnouncement(announcement);
-    setIsAddModalOpen(true);
+  const handleAdd = () => {
+    setSelectedAnnouncement(null);
+    setModalMode("create");
+    setIsModalOpen(true);
+  };
+
+  const handleView = (announcement: AnnouncementRow) => {
+    setSelectedAnnouncement(announcement);
+    setModalMode("view");
+    setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
-    setIsAddModalOpen(false);
-    setEditAnnouncement(null);
+    setIsModalOpen(false);
+    setSelectedAnnouncement(null);
+  };
+
+  const handleEditFromView = () => {
+    setModalMode("edit");
+  };
+
+  const handleDelete = (announcement?: AnnouncementRow) => {
+    const itemToDelete = announcement || selectedAnnouncement;
+    if (itemToDelete) {
+      setAnnouncementToDelete(itemToDelete);
+      setIsModalOpen(false);
+      setIsDeleteConfirmOpen(true);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!announcementToDelete || !hotelId) return;
+
+    try {
+      await deleteAnnouncement.mutateAsync({
+        id: announcementToDelete.id,
+        hotelId,
+      });
+      setIsDeleteConfirmOpen(false);
+      setAnnouncementToDelete(null);
+    } catch {
+      // Error is handled by the mutation
+    }
+  };
+
+  const handleSubmit = async (data: AnnouncementFormData) => {
+    if (!hotelId || !user?.id) return;
+
+    if (modalMode === "create") {
+      await createAnnouncement.mutateAsync({
+        title: data.title.trim(),
+        description: data.description.trim(),
+        is_active: data.isActive,
+        hotel_id: hotelId,
+        created_by: user.id,
+      });
+    } else if (modalMode === "edit" && selectedAnnouncement) {
+      await updateAnnouncement.mutateAsync({
+        id: selectedAnnouncement.id,
+        updates: {
+          title: data.title.trim(),
+          description: data.description.trim(),
+          is_active: data.isActive,
+        },
+      });
+    }
   };
 
   return (
@@ -60,18 +140,31 @@ export function Announcements() {
         searchPlaceholder="Search announcements by title or description..."
         onSearchClear={handleSearchClear}
         buttonLabel="Add Announcement"
-        onButtonClick={() => setIsAddModalOpen(true)}
+        onButtonClick={handleAdd}
       />
 
       <TableContainer>
-        <AnnouncementsTable searchValue={searchValue} onEdit={handleEdit} />
+        <AnnouncementsTable searchValue={searchValue} onView={handleView} />
       </TableContainer>
 
-      {/* Add/Edit Announcement Modal */}
-      <AddAnnouncementModal
-        isOpen={isAddModalOpen}
+      <AnnouncementModal
+        isOpen={isModalOpen}
         onClose={handleCloseModal}
-        editData={editAnnouncement}
+        mode={modalMode}
+        announcement={selectedAnnouncement}
+        onSubmit={handleSubmit}
+        onEdit={modalMode === "view" ? handleEditFromView : undefined}
+        onDelete={modalMode === "view" ? () => handleDelete() : undefined}
+      />
+
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Announcement"
+        message={`Are you sure you want to delete "${announcementToDelete?.title}"? This action cannot be undone.`}
+        confirmText="Delete"
+        variant="danger"
       />
     </PageContent>
   );

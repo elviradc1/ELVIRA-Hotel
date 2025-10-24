@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { EmergencyContactsTable, AddEmergencyContactModal } from "./components";
+import {
+  EmergencyContactsTable,
+  EmergencyContactModal,
+  type EmergencyContactFormData,
+} from "./components";
 import type { Database } from "../../../types/database";
 import {
   PageContent,
@@ -7,27 +11,104 @@ import {
   PageToolbar,
   TableContainer,
 } from "../../../components/shared/page-layouts";
+import { ConfirmationModal } from "../../../components/ui";
+import {
+  useCreateEmergencyContact,
+  useUpdateEmergencyContact,
+  useDeleteEmergencyContact,
+} from "../../../hooks/emergency-contacts/useEmergencyContacts";
+import { useHotelId, useAuth } from "../../../hooks";
 
 type EmergencyContact =
   Database["public"]["Tables"]["emergency_contacts"]["Row"];
+type ModalMode = "create" | "edit" | "view";
 
 export function EmergencyContacts() {
+  const hotelId = useHotelId();
+  const { user } = useAuth();
+
   const [searchValue, setSearchValue] = useState("");
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editContact, setEditContact] = useState<EmergencyContact | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<ModalMode>("create");
+  const [selectedContact, setSelectedContact] =
+    useState<EmergencyContact | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [contactToDelete, setContactToDelete] =
+    useState<EmergencyContact | null>(null);
+
+  const createContact = useCreateEmergencyContact();
+  const updateContact = useUpdateEmergencyContact();
+  const deleteContact = useDeleteEmergencyContact();
 
   const handleSearchClear = () => {
     setSearchValue("");
   };
 
-  const handleEdit = (contact: EmergencyContact) => {
-    setEditContact(contact);
-    setIsAddModalOpen(true);
+  const handleAdd = () => {
+    setSelectedContact(null);
+    setModalMode("create");
+    setIsModalOpen(true);
+  };
+
+  const handleView = (contact: EmergencyContact) => {
+    setSelectedContact(contact);
+    setModalMode("view");
+    setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
-    setIsAddModalOpen(false);
-    setEditContact(null);
+    setIsModalOpen(false);
+    setSelectedContact(null);
+  };
+
+  const handleEditFromView = () => {
+    setModalMode("edit");
+  };
+
+  const handleDelete = (contact?: EmergencyContact) => {
+    const itemToDelete = contact || selectedContact;
+    if (itemToDelete) {
+      setContactToDelete(itemToDelete);
+      setIsModalOpen(false);
+      setIsDeleteConfirmOpen(true);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!contactToDelete || !hotelId) return;
+
+    try {
+      await deleteContact.mutateAsync({
+        id: contactToDelete.id,
+        hotelId,
+      });
+      setIsDeleteConfirmOpen(false);
+      setContactToDelete(null);
+    } catch {
+      // Error is handled by the mutation
+    }
+  };
+
+  const handleSubmit = async (data: EmergencyContactFormData) => {
+    if (!hotelId || !user?.id) return;
+
+    if (modalMode === "create") {
+      await createContact.mutateAsync({
+        contact_name: data.contactName.trim(),
+        phone_number: data.phoneNumber.trim(),
+        is_active: true,
+        hotel_id: hotelId,
+        created_by: user.id,
+      });
+    } else if (modalMode === "edit" && selectedContact) {
+      await updateContact.mutateAsync({
+        id: selectedContact.id,
+        updates: {
+          contact_name: data.contactName.trim(),
+          phone_number: data.phoneNumber.trim(),
+        },
+      });
+    }
   };
 
   return (
@@ -59,18 +140,31 @@ export function EmergencyContacts() {
         searchPlaceholder="Search emergency contacts by name or phone..."
         onSearchClear={handleSearchClear}
         buttonLabel="Add Contact"
-        onButtonClick={() => setIsAddModalOpen(true)}
+        onButtonClick={handleAdd}
       />
 
       <TableContainer>
-        <EmergencyContactsTable searchValue={searchValue} onEdit={handleEdit} />
+        <EmergencyContactsTable searchValue={searchValue} onView={handleView} />
       </TableContainer>
 
-      {/* Add/Edit Emergency Contact Modal */}
-      <AddEmergencyContactModal
-        isOpen={isAddModalOpen}
+      <EmergencyContactModal
+        isOpen={isModalOpen}
         onClose={handleCloseModal}
-        editData={editContact}
+        mode={modalMode}
+        contact={selectedContact}
+        onSubmit={handleSubmit}
+        onEdit={modalMode === "view" ? handleEditFromView : undefined}
+        onDelete={modalMode === "view" ? () => handleDelete() : undefined}
+      />
+
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Emergency Contact"
+        message={`Are you sure you want to delete "${contactToDelete?.contact_name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        variant="danger"
       />
     </PageContent>
   );

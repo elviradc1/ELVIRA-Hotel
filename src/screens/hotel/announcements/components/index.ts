@@ -1,2 +1,5 @@
 export { AnnouncementsTable } from "./AnnouncementsTable";
-export { AddAnnouncementModal } from "./AddAnnouncementModal";
+export {
+  AnnouncementModal,
+  type AnnouncementFormData,
+} from "./announcement-modal";

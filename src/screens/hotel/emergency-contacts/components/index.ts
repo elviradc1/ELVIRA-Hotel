@@ -1,2 +1,5 @@
 export { EmergencyContactsTable } from "./EmergencyContactsTable";
-export { AddEmergencyContactModal } from "./AddEmergencyContactModal";
+export {
+  EmergencyContactModal,
+  type EmergencyContactFormData,
+} from "./emergency-contact-modal";
