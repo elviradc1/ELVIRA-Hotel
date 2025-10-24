@@ -8,7 +8,7 @@ import {
   useToggleHotelRecommended,
 } from "../../../../hooks/third-party-management";
 import { useCurrentUserHotel } from "../../../../hooks/useCurrentUserHotel";
-import { DistanceFilter, PlaceDetailsModal } from "../components";
+import { DistanceFilter, PlaceDetailsModal, MapViewModal } from "../components";
 import { filterPlacesByDistance } from "../../../../utils/distance";
 import type { TableColumn } from "../../../../components/ui/tables/types";
 
@@ -27,6 +27,7 @@ export function Tours({ searchValue }: ToursProps) {
   // Modal state
   const [selectedPlace, setSelectedPlace] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   // Fetch Elvira-approved places
   const { data: places, isLoading } = useApprovedThirdPartyPlaces("tours");
@@ -283,6 +284,7 @@ export function Tours({ searchValue }: ToursProps) {
             value={maxDistance}
             onChange={setMaxDistance}
             onClear={() => setMaxDistance(999999)}
+            onMapClick={() => setIsMapModalOpen(true)}
           />
         )}
       </div>
@@ -318,6 +320,14 @@ export function Tours({ searchValue }: ToursProps) {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         place={selectedPlace}
+      />
+
+      {/* Map View Modal */}
+      <MapViewModal
+        isOpen={isMapModalOpen}
+        onClose={() => setIsMapModalOpen(false)}
+        places={filteredPlaces}
+        category="tours"
       />
     </div>
   );
