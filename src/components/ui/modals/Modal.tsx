@@ -6,15 +6,17 @@ interface ModalProps {
   onClose: () => void;
   title?: string;
   children: ReactNode;
-  size?: "sm" | "md" | "lg" | "xl";
+  footer?: ReactNode;
+  size?: "sm" | "md" | "lg" | "xl" | "2xl";
   closeOnOverlayClick?: boolean;
 }
 
 const sizeStyles = {
   sm: "max-w-md",
-  md: "max-w-lg",
-  lg: "max-w-2xl",
-  xl: "max-w-4xl",
+  md: "max-w-xl",
+  lg: "max-w-3xl",
+  xl: "max-w-5xl",
+  "2xl": "max-w-6xl",
 };
 
 export function Modal({
@@ -22,6 +24,7 @@ export function Modal({
   onClose,
   title,
   children,
+  footer,
   size = "md",
   closeOnOverlayClick = true,
 }: ModalProps) {
@@ -66,12 +69,12 @@ export function Modal({
 
         {/* Modal */}
         <div
-          className={`relative bg-white rounded-3xl shadow-xl w-full ${sizeStyles[size]} transform transition-all`}
+          className={`relative bg-white rounded-3xl shadow-xl w-full ${sizeStyles[size]} max-h-[90vh] flex flex-col transform transition-all`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           {title && (
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 shrink-0">
               <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
               <button
                 onClick={onClose}
@@ -93,9 +96,15 @@ export function Modal({
               </button>
             </div>
           )}
+          {/* Content - Scrollable */}
+          <div className="p-6 overflow-y-auto flex-1 min-h-0">{children}</div>
 
-          {/* Content */}
-          <div className="p-6">{children}</div>
+          {/* Footer - Fixed at bottom */}
+          {footer && (
+            <div className="shrink-0 border-t border-gray-200 px-6 py-4 bg-white rounded-b-3xl">
+              {footer}
+            </div>
+          )}
         </div>
       </div>
     </div>

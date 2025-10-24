@@ -3,6 +3,7 @@ import {
   Table,
   type TableColumn,
   StatusBadge,
+  RecommendedToggle,
 } from "../../../../../components/ui";
 import {
   useMenuItems,
@@ -118,24 +119,16 @@ export function MenuItemsTable({ searchValue, onView }: MenuItemsTableProps) {
       render: (_value, row) => (
         <div className="flex items-center gap-2">
           <span>{row.item}</span>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
+          <RecommendedToggle
+            isRecommended={row.hotelRecommended || false}
+            onToggle={() => {
               updateMenuItem.mutate({
                 id: row.id,
                 updates: { hotel_recommended: !row.hotelRecommended },
               });
             }}
-            className="text-base hover:scale-110 transition-transform cursor-pointer"
-            title={
-              row.hotelRecommended
-                ? "Remove from recommended"
-                : "Mark as recommended"
-            }
-          >
-            {row.hotelRecommended ? "⭐" : "☆"}
-          </button>
+            size="sm"
+          />
         </div>
       ),
     },

@@ -189,18 +189,21 @@ export function ProductModal({
         onChange={handleFieldChange}
       />
 
-      <StockSection
-        formData={formData}
-        errors={errors}
-        mode={mode}
-        onChange={handleFieldChange}
-      />
+      {/* Two-column layout for Stock and Options */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <StockSection
+          formData={formData}
+          errors={errors}
+          mode={mode}
+          onChange={handleFieldChange}
+        />
 
-      <OptionsSection
-        formData={formData}
-        mode={mode}
-        onChange={handleFieldChange}
-      />
+        <OptionsSection
+          formData={formData}
+          mode={mode}
+          onChange={handleFieldChange}
+        />
+      </div>
     </ModalForm>
   );
 }

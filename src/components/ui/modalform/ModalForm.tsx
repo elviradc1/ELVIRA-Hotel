@@ -23,13 +23,18 @@ export function ModalForm({
   size = "lg",
 }: ModalFormProps) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} size={size}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title}
+      size={size}
+      footer={
+        footer ? (
+          <div className="flex justify-end gap-3">{footer}</div>
+        ) : undefined
+      }
+    >
       <div className="space-y-4">{children}</div>
-      {footer && (
-        <div className="sticky bottom-0 bg-white flex justify-end gap-3 pt-4 border-t border-gray-200 mt-6">
-          {footer}
-        </div>
-      )}
     </Modal>
   );
 }

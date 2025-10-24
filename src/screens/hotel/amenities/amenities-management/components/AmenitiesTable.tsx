@@ -4,6 +4,7 @@ import {
   type TableColumn,
   StatusBadge,
   ConfirmationModal,
+  RecommendedToggle,
 } from "../../../../../components/ui";
 import {
   useAmenities,
@@ -147,24 +148,16 @@ export function AmenitiesTable({ searchValue }: AmenitiesTableProps) {
       render: (_value, row) => (
         <div className="flex items-center gap-2">
           <span>{row.amenity}</span>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
+          <RecommendedToggle
+            isRecommended={row.hotelRecommended || false}
+            onToggle={() => {
               updateAmenity.mutate({
                 id: row.id,
                 updates: { recommended: !row.hotelRecommended },
               });
             }}
-            className="text-base hover:scale-110 transition-transform cursor-pointer"
-            title={
-              row.hotelRecommended
-                ? "Remove from recommended"
-                : "Mark as recommended"
-            }
-          >
-            {row.hotelRecommended ? "⭐" : "☆"}
-          </button>
+            size="sm"
+          />
         </div>
       ),
     },

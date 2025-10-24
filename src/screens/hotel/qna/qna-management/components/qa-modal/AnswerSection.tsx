@@ -1,8 +1,4 @@
-import {
-  ModalFormSection,
-  ModalFormGrid,
-  Textarea,
-} from "../../../../../../components/ui";
+import { ModalFormSection, Textarea } from "../../../../../../components/ui";
 import type { QAFormData } from "./types";
 
 interface AnswerSectionProps {
@@ -20,17 +16,15 @@ export function AnswerSection({
 
   return (
     <ModalFormSection title="Answer">
-      <ModalFormGrid columns={1}>
-        <Textarea
-          label="Answer"
-          value={formData.answer}
-          onChange={(e) => onChange("answer", e.target.value)}
-          placeholder="Enter the answer..."
-          rows={4}
-          required
-          disabled={isReadOnly}
-        />
-      </ModalFormGrid>
+      <Textarea
+        label="Answer"
+        value={formData.answer}
+        onChange={(e) => onChange("answer", e.target.value)}
+        placeholder="Enter the answer..."
+        rows={4}
+        required
+        disabled={isReadOnly}
+      />
     </ModalFormSection>
   );
 }

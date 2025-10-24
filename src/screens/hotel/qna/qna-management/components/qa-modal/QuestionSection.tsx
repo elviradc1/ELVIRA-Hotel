@@ -1,8 +1,4 @@
-import {
-  ModalFormSection,
-  ModalFormGrid,
-  Input,
-} from "../../../../../../components/ui";
+import { ModalFormSection, Input } from "../../../../../../components/ui";
 import type { QAFormData } from "./types";
 
 interface QuestionSectionProps {
@@ -20,16 +16,14 @@ export function QuestionSection({
 
   return (
     <ModalFormSection title="Question">
-      <ModalFormGrid columns={1}>
-        <Input
-          label="Question"
-          value={formData.question}
-          onChange={(e) => onChange("question", e.target.value)}
-          placeholder="Enter the question..."
-          required
-          disabled={isReadOnly}
-        />
-      </ModalFormGrid>
+      <Input
+        label="Question"
+        value={formData.question}
+        onChange={(e) => onChange("question", e.target.value)}
+        placeholder="Enter the question..."
+        required
+        disabled={isReadOnly}
+      />
     </ModalFormSection>
   );
 }

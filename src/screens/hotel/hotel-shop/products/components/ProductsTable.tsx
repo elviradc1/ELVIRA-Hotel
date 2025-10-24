@@ -3,6 +3,7 @@ import {
   Table,
   type TableColumn,
   StatusBadge,
+  RecommendedToggle,
 } from "../../../../../components/ui";
 import {
   useProducts,
@@ -105,27 +106,19 @@ export function ProductsTable({ searchValue, onView }: ProductsTableProps) {
       key: "product",
       label: "Product",
       sortable: true,
-      render: (_value, row) => (
+      render: (_value: unknown, row: Product) => (
         <div className="flex items-center gap-2">
           <span>{row.product}</span>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
+          <RecommendedToggle
+            isRecommended={row.hotelRecommended || false}
+            onToggle={() => {
               updateProduct.mutate({
                 id: row.id,
                 updates: { recommended: !row.hotelRecommended },
               });
             }}
-            className="text-base hover:scale-110 transition-transform cursor-pointer"
-            title={
-              row.hotelRecommended
-                ? "Remove from recommended"
-                : "Mark as recommended"
-            }
-          >
-            {row.hotelRecommended ? "⭐" : "☆"}
-          </button>
+            size="sm"
+          />
         </div>
       ),
     },
