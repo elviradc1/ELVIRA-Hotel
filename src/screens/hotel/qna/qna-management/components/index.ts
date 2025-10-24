@@ -1,2 +1,2 @@
 export { QnATable } from "./QnATable";
-export { AddQAModal } from "./AddQAModal";
+export { QAModal, type QAFormData } from "./qa-modal";

@@ -1,6 +1,12 @@
 import { useState } from "react";
-import { QnATable, AddQAModal } from "./components";
-import { Button } from "../../../../components/ui";
+import { QnATable, QAModal, type QAFormData } from "./components";
+import { Button, ConfirmationModal } from "../../../../components/ui";
+import {
+  useCreateQARecommendation,
+  useUpdateQARecommendation,
+  useDeleteQARecommendation,
+} from "../../../../hooks/qna/useQARecommendations";
+import { useHotelContext } from "../../../../hooks";
 import type { Database } from "../../../../types/database";
 
 type QARecommendation =
@@ -11,17 +17,90 @@ interface QnAManagementProps {
 }
 
 export function QnAManagement({ searchValue }: QnAManagementProps) {
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editQA, setEditQA] = useState<QARecommendation | null>(null);
+  const { hotelId } = useHotelContext();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"create" | "edit" | "view">("create");
+  const [selectedQA, setSelectedQA] = useState<QARecommendation | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [qaToDelete, setQAToDelete] = useState<QARecommendation | null>(null);
 
-  const handleEdit = (qaItem: QARecommendation) => {
-    setEditQA(qaItem);
-    setIsAddModalOpen(true);
+  const createQA = useCreateQARecommendation();
+  const updateQA = useUpdateQARecommendation();
+  const deleteQA = useDeleteQARecommendation();
+
+  const handleAdd = () => {
+    setModalMode("create");
+    setSelectedQA(null);
+    setIsModalOpen(true);
+  };
+
+  const handleView = (qaItem: QARecommendation) => {
+    setModalMode("view");
+    setSelectedQA(qaItem);
+    setIsModalOpen(true);
+  };
+
+  const handleEditFromView = () => {
+    setModalMode("edit");
   };
 
   const handleCloseModal = () => {
-    setIsAddModalOpen(false);
-    setEditQA(null);
+    setIsModalOpen(false);
+    setSelectedQA(null);
+  };
+
+  const handleSubmit = async (data: QAFormData) => {
+    if (!hotelId) return;
+
+    try {
+      if (modalMode === "create") {
+        await createQA.mutateAsync({
+          hotel_id: hotelId,
+          question: data.question,
+          answer: data.answer,
+          category: data.category,
+          type: data.type,
+          is_active: data.isActive,
+        });
+      } else if (modalMode === "edit" && selectedQA) {
+        await updateQA.mutateAsync({
+          id: selectedQA.id,
+          updates: {
+            question: data.question,
+            answer: data.answer,
+            category: data.category,
+            type: data.type,
+            is_active: data.isActive,
+          },
+        });
+      }
+      handleCloseModal();
+    } catch (error) {
+      console.error("Error submitting Q&A:", error);
+    }
+  };
+
+  const handleDelete = () => {
+    if (selectedQA) {
+      setQaToDelete(selectedQA);
+      setIsDeleteConfirmOpen(true);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!qaToDelete || !hotelId) return;
+
+    try {
+      await deleteQA.mutateAsync({
+        id: qaToDelete.id,
+        hotelId,
+      });
+      setIsDeleteConfirmOpen(false);
+      setQaToDelete(null);
+      handleCloseModal();
+    } catch (error) {
+      console.error("Error deleting Q&A:", error);
+    }
   };
 
   return (
@@ -38,7 +117,7 @@ export function QnAManagement({ searchValue }: QnAManagementProps) {
         <Button
           variant="primary"
           size="md"
-          onClick={() => setIsAddModalOpen(true)}
+          onClick={handleAdd}
         >
           <svg
             className="w-4 h-4 mr-2"
@@ -57,13 +136,26 @@ export function QnAManagement({ searchValue }: QnAManagementProps) {
         </Button>
       </div>
 
-      <QnATable searchValue={searchValue} onEdit={handleEdit} />
+      <QnATable searchValue={searchValue} onView={handleView} />
 
-      {/* Add/Edit Q&A Modal */}
-      <AddQAModal
-        isOpen={isAddModalOpen}
+      <QAModal
+        isOpen={isModalOpen}
         onClose={handleCloseModal}
-        editData={editQA}
+        mode={modalMode}
+        qaItem={selectedQA}
+        onSubmit={handleSubmit}
+        onEdit={modalMode === "view" ? handleEditFromView : undefined}
+        onDelete={modalMode === "view" ? handleDelete : undefined}
+      />
+
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Q&A"
+        message={`Are you sure you want to delete this Q&A item? This action cannot be undone.`}
+        confirmText="Delete"
+        variant="danger"
       />
     </div>
   );

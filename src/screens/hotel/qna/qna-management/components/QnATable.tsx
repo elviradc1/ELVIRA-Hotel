@@ -1,17 +1,14 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   Table,
   type TableColumn,
   StatusBadge,
-  ConfirmationModal,
 } from "../../../../../components/ui";
 import {
   useQARecommendations,
   useUpdateQARecommendation,
-  useDeleteQARecommendation,
 } from "../../../../../hooks/qna/useQARecommendations";
-import { useHotelContext, usePagination } from "../../../../../hooks";
-import { QADetailModal } from "./QADetailModal";
+import { useHotelContext } from "../../../../../hooks";
 import type { Database } from "../../../../../types/database";
 
 type QARecommendationRow =
@@ -30,22 +27,12 @@ interface QnATableData extends Record<string, unknown> {
 
 interface QnATableProps {
   searchValue: string;
-  onEdit: (qaItem: QARecommendationRow) => void;
+  onView: (qaItem: QARecommendationRow) => void;
 }
 
-export function QnATable({ searchValue, onEdit }: QnATableProps) {
+export function QnATable({ searchValue, onView }: QnATableProps) {
   // Get hotel ID from context
   const { hotelId } = useHotelContext();
-
-  // State for detail modal
-  const [selectedQA, setSelectedQA] = useState<QARecommendationRow | null>(
-    null
-  );
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [qaToDelete, setQAToDelete] = useState<QARecommendationRow | null>(
-    null
-  );
 
   // Fetch Q&A recommendations data
   const {
@@ -56,52 +43,13 @@ export function QnATable({ searchValue, onEdit }: QnATableProps) {
 
   // Get the mutations
   const updateQARecommendation = useUpdateQARecommendation();
-  const deleteQARecommendation = useDeleteQARecommendation();
 
   // Handler for row click
   const handleRowClick = (row: QnATableData) => {
     const qaItem = qnaItems.find((q) => q.id === row.id);
     if (qaItem) {
-      setSelectedQA(qaItem);
-      setIsDetailModalOpen(true);
+      onView(qaItem);
     }
-  };
-
-  // Handler for closing modal
-  const handleCloseModal = () => {
-    setIsDetailModalOpen(false);
-    setSelectedQA(null);
-  };
-
-  // Handler for edit
-  const handleEdit = () => {
-    if (selectedQA) {
-      onEdit(selectedQA);
-    }
-  };
-
-  // Handler for delete
-  const handleDelete = () => {
-    if (selectedQA) {
-      setQAToDelete(selectedQA);
-      setIsDeleteConfirmOpen(true);
-    }
-  };
-
-  // Confirm delete
-  const confirmDelete = async () => {
-    if (!qaToDelete || !hotelId) return;
-    try {
-      await deleteQARecommendation.mutateAsync({
-        id: qaToDelete.id,
-        hotelId,
-      });
-      setIsDeleteConfirmOpen(false);
-      setQAToDelete(null);
-      setIsDetailModalOpen(false);
-      setSelectedQA(null);
-    } catch (error) {
-}
   };
 
   // Transform and filter Q&A data
@@ -179,15 +127,6 @@ export function QnATable({ searchValue, onEdit }: QnATableProps) {
     },
   ];
 
-  // Pagination
-  const {
-    currentPage,
-    totalPages,
-    paginatedData,
-    itemsPerPage,
-    setCurrentPage,
-  } = usePagination<QnATableData>({ data: qnaData, itemsPerPage: 10 });
-
   return (
     <div className="mt-6">
       {searchValue && (
@@ -208,38 +147,13 @@ export function QnATable({ searchValue, onEdit }: QnATableProps) {
       <div className="bg-white rounded-lg border border-gray-200">
         <Table
           columns={columns}
-          data={paginatedData}
+          data={qnaData}
           loading={isLoading}
           emptyMessage="No Q&A items found. Add new questions and answers to get started."
-          showPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={qnaData.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
+          itemsPerPage={10}
           onRowClick={handleRowClick}
         />
       </div>
-
-      {/* Detail Modal */}
-      <QADetailModal
-        qaItem={selectedQA}
-        isOpen={isDetailModalOpen}
-        onClose={handleCloseModal}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
-
-      {/* Delete Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={isDeleteConfirmOpen}
-        onClose={() => setIsDeleteConfirmOpen(false)}
-        onConfirm={confirmDelete}
-        title="Delete Q&A"
-        message="Are you sure you want to delete this Q&A item? This action cannot be undone."
-        confirmText="Delete"
-        variant="danger"
-      />
     </div>
   );
 }
