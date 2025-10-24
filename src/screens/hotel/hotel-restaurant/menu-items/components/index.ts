@@ -1,2 +1,3 @@
 export { MenuItemsTable } from "./MenuItemsTable";
-export { AddMenuItemModal } from "./add-menu-item-modal";
+export { MenuItemModal } from "./menu-item-modal";
+export type { MenuItemFormData } from "./menu-item-modal";

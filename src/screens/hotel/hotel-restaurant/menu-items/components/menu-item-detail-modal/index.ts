@@ -1,1 +1,0 @@
-export { MenuItemDetailModal } from "./MenuItemDetailModal";

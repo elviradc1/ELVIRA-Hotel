@@ -1,1 +1,0 @@
-export { DineInOrderDetailModal } from "./DineInOrderDetailModal";

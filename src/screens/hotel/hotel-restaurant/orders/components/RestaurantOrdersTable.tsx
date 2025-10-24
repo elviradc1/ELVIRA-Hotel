@@ -1,17 +1,11 @@
 import { useMemo, useState } from "react";
-import {
-  Table,
-  type TableColumn,
-  ConfirmationModal,
-} from "../../../../../components/ui";
+import { Table, type TableColumn } from "../../../../../components/ui";
 import {
   useDineInOrders,
-  useDeleteDineInOrder,
   type DineInOrderWithDetails,
 } from "../../../../../hooks/hotel-restaurant/dine-in-orders/useDineInOrders";
 import { useHotelId } from "../../../../../hooks/useHotelContext";
-import { usePagination } from "../../../../../hooks";
-import { DineInOrderDetailModal } from "./dine-in-order-detail-modal";
+import { RestaurantOrderModal } from "./restaurant-order-modal";
 
 interface RestaurantOrder extends Record<string, unknown> {
   id: string;
@@ -35,9 +29,6 @@ export function RestaurantOrdersTable({
   const [selectedOrder, setSelectedOrder] =
     useState<DineInOrderWithDetails | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [orderToDelete, setOrderToDelete] =
-    useState<DineInOrderWithDetails | null>(null);
 
   // Fetch dine-in orders using the hook
   const {
@@ -45,9 +36,6 @@ export function RestaurantOrdersTable({
     isLoading,
     error,
   } = useDineInOrders(hotelId || undefined);
-
-  // Get delete mutation
-  const deleteOrder = useDeleteDineInOrder();
 
   // Handle row click to open details modal
   const handleRowClick = (row: RestaurantOrder) => {
@@ -62,30 +50,6 @@ export function RestaurantOrdersTable({
   const handleCloseModal = () => {
     setIsDetailModalOpen(false);
     setSelectedOrder(null);
-  };
-
-  // Delete handler: open confirmation modal
-  const handleDelete = () => {
-    if (selectedOrder) {
-      setOrderToDelete(selectedOrder);
-      setIsDeleteConfirmOpen(true);
-      setIsDetailModalOpen(false);
-    }
-  };
-
-  // Confirm delete action
-  const confirmDelete = () => {
-    if (orderToDelete && hotelId) {
-      deleteOrder.mutate(
-        { id: orderToDelete.id, hotelId },
-        {
-          onSuccess: () => {
-            setIsDeleteConfirmOpen(false);
-            setOrderToDelete(null);
-          },
-        }
-      );
-    }
   };
 
   // Define table columns for restaurant orders
@@ -171,15 +135,6 @@ export function RestaurantOrdersTable({
       });
   }, [dineInOrders, searchValue]);
 
-  // Pagination
-  const {
-    currentPage,
-    totalPages,
-    paginatedData,
-    itemsPerPage,
-    setCurrentPage,
-  } = usePagination<RestaurantOrder>({ data: orderData, itemsPerPage: 10 });
-
   if (error) {
     return (
       <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
@@ -202,40 +157,19 @@ export function RestaurantOrdersTable({
       <div className="bg-white rounded-lg border border-gray-200">
         <Table
           columns={columns}
-          data={paginatedData}
+          data={orderData}
           loading={isLoading}
           emptyMessage="No restaurant orders found. Orders will appear here once guests place orders."
           onRowClick={handleRowClick}
-          showPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={orderData.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
+          itemsPerPage={10}
         />
       </div>
 
-      {/* Order Detail Modal */}
-      <DineInOrderDetailModal
+      {/* Order Detail Modal - View Only */}
+      <RestaurantOrderModal
         isOpen={isDetailModalOpen}
         onClose={handleCloseModal}
         order={selectedOrder}
-        onDelete={handleDelete}
-      />
-
-      {/* Confirmation Modal for Delete */}
-      <ConfirmationModal
-        isOpen={isDeleteConfirmOpen}
-        title="Delete Order"
-        message="Are you sure you want to delete this order? This action cannot be undone."
-        confirmText="Delete"
-        variant="danger"
-        onConfirm={confirmDelete}
-        onClose={() => {
-          setIsDeleteConfirmOpen(false);
-          setOrderToDelete(null);
-        }}
-        loading={deleteOrder.isPending}
       />
     </div>
   );

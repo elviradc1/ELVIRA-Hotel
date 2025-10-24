@@ -10,9 +10,8 @@ import {
   useUpdateRestaurant,
   useDeleteRestaurant,
 } from "../../../../../hooks/hotel-restaurant/restaurants/useRestaurants";
-import { useHotelId, usePagination } from "../../../../../hooks";
+import { useHotelId } from "../../../../../hooks";
 import type { Database } from "../../../../../types/database";
-import { RestaurantDetailModal } from "./RestaurantDetailModal";
 
 type RestaurantRow = Database["public"]["Tables"]["restaurants"]["Row"];
 
@@ -28,11 +27,13 @@ interface Restaurant extends Record<string, unknown> {
 interface RestaurantsTableProps {
   searchValue: string;
   onEdit?: (restaurant: RestaurantRow) => void;
+  onView?: (restaurant: RestaurantRow) => void;
+  onDelete?: (restaurant: RestaurantRow) => void;
 }
 
 export function RestaurantsTable({
   searchValue,
-  onEdit,
+  onView,
 }: RestaurantsTableProps) {
   const hotelId = useHotelId();
 
@@ -47,10 +48,7 @@ export function RestaurantsTable({
   const updateRestaurant = useUpdateRestaurant();
   const deleteRestaurant = useDeleteRestaurant();
 
-  // State for detail modal and delete confirmation
-  const [selectedRestaurant, setSelectedRestaurant] =
-    useState<RestaurantRow | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  // State for delete confirmation
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [restaurantToDelete, setRestaurantToDelete] =
     useState<RestaurantRow | null>(null);
@@ -60,23 +58,9 @@ export function RestaurantsTable({
     const originalRestaurant = restaurants?.find(
       (r: RestaurantRow) => r.id === restaurant.id
     );
-    if (originalRestaurant) {
-      setSelectedRestaurant(originalRestaurant);
-      setIsDetailModalOpen(true);
+    if (originalRestaurant && onView) {
+      onView(originalRestaurant);
     }
-  };
-
-  const handleEdit = () => {
-    if (selectedRestaurant && onEdit) {
-      onEdit(selectedRestaurant);
-      setIsDetailModalOpen(false);
-    }
-  };
-
-  const handleDelete = () => {
-    setRestaurantToDelete(selectedRestaurant);
-    setIsDetailModalOpen(false);
-    setIsDeleteConfirmOpen(true);
   };
 
   const confirmDelete = async () => {
@@ -89,8 +73,9 @@ export function RestaurantsTable({
       });
       setIsDeleteConfirmOpen(false);
       setRestaurantToDelete(null);
-    } catch (error) {
-}
+    } catch {
+      // Error is handled by the mutation
+    }
   };
 
   // Define table columns for restaurants
@@ -156,15 +141,6 @@ export function RestaurantsTable({
       }));
   }, [restaurants, searchValue]);
 
-  // Pagination
-  const {
-    currentPage,
-    totalPages,
-    paginatedData,
-    itemsPerPage,
-    setCurrentPage,
-  } = usePagination<Restaurant>({ data: restaurantData, itemsPerPage: 10 });
-
   if (error) {
     return (
       <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
@@ -188,31 +164,17 @@ export function RestaurantsTable({
       <div className="bg-white rounded-lg border border-gray-200">
         <Table
           columns={columns}
-          data={paginatedData}
+          data={restaurantData}
           loading={isLoading}
           emptyMessage={
             searchValue
               ? `No restaurants found matching "${searchValue}".`
               : "No restaurants found. Add new restaurants to get started."
           }
-          showPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={restaurantData.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
+          itemsPerPage={10}
           onRowClick={handleRowClick}
         />
       </div>
-
-      {/* Restaurant Detail Modal */}
-      <RestaurantDetailModal
-        isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
-        restaurant={selectedRestaurant}
-        onEdit={onEdit ? handleEdit : undefined}
-        onDelete={handleDelete}
-      />
 
       {/* Delete Confirmation Modal */}
       <ConfirmationModal

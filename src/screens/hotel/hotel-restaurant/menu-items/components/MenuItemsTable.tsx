@@ -3,18 +3,13 @@ import {
   Table,
   type TableColumn,
   StatusBadge,
-  ConfirmationModal,
 } from "../../../../../components/ui";
 import {
   useMenuItems,
   useUpdateMenuItem,
-  useDeleteMenuItem,
 } from "../../../../../hooks/hotel-restaurant/menu-items/useMenuItems";
 import { useRestaurants } from "../../../../../hooks/hotel-restaurant/restaurants/useRestaurants";
-import { useHotelId, usePagination } from "../../../../../hooks";
-import { MenuItemDetailModal } from "./menu-item-detail-modal";
-import { AddMenuItemModal } from "./add-menu-item-modal";
-import { useItemTableModals } from "../../../../../components/shared/tables/useItemTableModals";
+import { useHotelId } from "../../../../../hooks";
 import type { Database } from "../../../../../types/database";
 
 type MenuItemRow = Database["public"]["Tables"]["menu_items"]["Row"];
@@ -33,26 +28,11 @@ interface MenuItem extends Record<string, unknown> {
 
 interface MenuItemsTableProps {
   searchValue: string;
+  onView: (menuItem: MenuItemRow) => void;
 }
 
-export function MenuItemsTable({ searchValue }: MenuItemsTableProps) {
+export function MenuItemsTable({ searchValue, onView }: MenuItemsTableProps) {
   const hotelId = useHotelId();
-
-  // Use shared modal state management hook
-  const {
-    selectedItem: selectedMenuItem,
-    isDetailModalOpen,
-    openDetailModal,
-    closeDetailModal,
-    itemToEdit: menuItemToEdit,
-    isEditModalOpen,
-    closeEditModal,
-    itemToDelete: menuItemToDelete,
-    isDeleteConfirmOpen,
-    closeDeleteConfirm,
-    handleEdit,
-    handleDelete,
-  } = useItemTableModals<MenuItemRow>();
 
   // Fetch menu items using the hook
   const {
@@ -64,9 +44,8 @@ export function MenuItemsTable({ searchValue }: MenuItemsTableProps) {
   // Fetch restaurants for name mapping
   const { data: restaurants } = useRestaurants(hotelId || undefined);
 
-  // Get the mutations
+  // Get the mutation
   const updateMenuItem = useUpdateMenuItem();
-  const deleteMenuItem = useDeleteMenuItem();
 
   // Create a map of restaurant IDs to names
   const restaurantMap = useMemo(() => {
@@ -78,24 +57,7 @@ export function MenuItemsTable({ searchValue }: MenuItemsTableProps) {
   const handleRowClick = (row: MenuItem) => {
     const fullMenuItem = menuItems?.find((item) => item.id === row.id);
     if (fullMenuItem) {
-      openDetailModal(fullMenuItem);
-    }
-  };
-
-  const handleCloseModal = closeDetailModal;
-
-  // Edit and delete handlers are now provided by the hook
-
-  const confirmDelete = () => {
-    if (menuItemToDelete && hotelId) {
-      deleteMenuItem.mutate(
-        { id: menuItemToDelete.id, hotelId },
-        {
-          onSuccess: () => {
-            closeDeleteConfirm();
-          },
-        }
-      );
+      onView(fullMenuItem);
     }
   };
 
@@ -239,15 +201,6 @@ export function MenuItemsTable({ searchValue }: MenuItemsTableProps) {
       });
   }, [menuItems, searchValue, restaurantMap]);
 
-  // Pagination
-  const {
-    currentPage,
-    totalPages,
-    paginatedData,
-    itemsPerPage,
-    setCurrentPage,
-  } = usePagination<MenuItem>({ data: menuItemData, itemsPerPage: 10 });
-
   if (error) {
     return (
       <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
@@ -270,47 +223,13 @@ export function MenuItemsTable({ searchValue }: MenuItemsTableProps) {
       <div className="bg-white rounded-lg border border-gray-200">
         <Table
           columns={columns}
-          data={paginatedData}
+          data={menuItemData}
           loading={isLoading}
           emptyMessage="No menu items found. Add new menu items to get started."
           onRowClick={handleRowClick}
-          showPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={menuItemData.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
+          itemsPerPage={10}
         />
       </div>
-
-      {/* Detail Modal */}
-      <MenuItemDetailModal
-        isOpen={isDetailModalOpen}
-        onClose={handleCloseModal}
-        menuItem={selectedMenuItem}
-        restaurants={restaurantMap}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
-
-      {/* Edit Modal */}
-      <AddMenuItemModal
-        isOpen={isEditModalOpen}
-        onClose={closeEditModal}
-        menuItem={menuItemToEdit}
-      />
-
-      {/* Delete Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={isDeleteConfirmOpen}
-        onClose={closeDeleteConfirm}
-        onConfirm={confirmDelete}
-        title="Delete Menu Item"
-        message={`Are you sure you want to delete "${menuItemToDelete?.name}"? This action cannot be undone.`}
-        confirmText="Delete"
-        variant="danger"
-        loading={deleteMenuItem.isPending}
-      />
     </div>
   );
 }

@@ -1,3 +1,3 @@
 export { RestaurantsTable } from "./RestaurantsTable";
-export { AddRestaurantModal } from "./AddRestaurantModal";
-export { RestaurantDetailModal } from "./RestaurantDetailModal";
+export { RestaurantModal } from "./restaurant-modal";
+export type { RestaurantFormData } from "./restaurant-modal";
