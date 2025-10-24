@@ -8,6 +8,7 @@ import {
   PageHeader,
   TableContainer,
 } from "../../../components/shared/page-layouts";
+import { ThirdPartyStatsCards } from "./components/ThirdPartyStatsCards";
 
 export function ThirdPartyManagement() {
   const [activeTab, setActiveTab] = useState("gastronomy");
@@ -140,7 +141,14 @@ export function ThirdPartyManagement() {
       />
 
       {/* Content Area */}
-      <TableContainer>{getTabContent()}</TableContainer>
+      <TableContainer>
+        {/* Stats Cards */}
+        <div className="mb-6">
+          <ThirdPartyStatsCards category={activeTab} />
+        </div>
+
+        {getTabContent()}
+      </TableContainer>
     </PageContent>
   );
 }

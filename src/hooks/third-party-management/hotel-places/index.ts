@@ -6,3 +6,5 @@ export {
   useRejectHotelPlace,
   useToggleHotelRecommended,
 } from "./useHotelPlaces";
+
+export { useHotelThirdPartyPlacesStats } from "./useHotelThirdPartyPlacesStats";
